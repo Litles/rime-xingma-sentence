@@ -99,10 +99,13 @@ class SchemaYujoyFluid:
             self.generate_dict_yaml_jianci()
 
         # 5.生成词库(词库yaml码表文件)
-        # 准备全部单字编码映射(一字可能有多个码)
+        # 准备全部单字编码映射(一字可能有多个码), 顺便收集码位占用数据
+        occupied_codes = set()  # 三码或四码全码
         dict_char_codes_new = defaultdict(set)  # 将包含简码在内
         for d in itertools.chain(self.list_char_code, list_char_code_ext):
             dict_char_codes_new[d["char"]].add(d["code"])
+            if "1" in d["code"]:
+                occupied_codes.add(d["code"].split("1")[0])
         # 开始处理生成词库 yaml 码表文件
         dir_in = "material_common/cn_dicts"
         dct = {
@@ -125,6 +128,32 @@ class SchemaYujoyFluid:
                     dict_meta,
                     self.dir_out
                 )
+
+        # 6.填充剩余的空码位，以单字码表的形式生成
+        self.generate_dict_yaml_none(occupied_codes)
+
+    def generate_dict_yaml_none(self, occupied_codes: set) -> None:
+        dict_name = "chars_none"
+        fp = os.path.join(self.dir_out, dict_name+".dict.yaml")
+        n3, n4 = 0, 0
+        with open(fp, 'w', encoding='utf-8') as fw:
+            yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·填充符号", f"填充所有空余码位，用于标识错误的输入")
+            fw.write(yaml_header)
+            fw.write("# --- 填充符号码表 ---\n")
+            for a in "abcdefghijklmnopqrstuvwxy":
+                for b in "abcdefghijklmnopqrstuvwxyz":
+                    for c in "abcdefghijklmnopqrstuvwxyz":
+                        code_len3 = a+b+c
+                        if code_len3 not in occupied_codes:  # 三码全码空余码位
+                            fw.write(f"⊗\t{code_len3}10\t0\n")
+                            n3 += 1
+                        for d in "abcdefghijklmnopqrstuvwxyz":
+                            code_len4 = code_len3+d
+                            if code_len4 not in occupied_codes:  # 四码全码空余码位
+                                fw.write(f"⊗\t{code_len4}1\t0\n")
+                                n4 += 1
+        print(f"共填充 {n3+n4} 空码位，三码和四码空码位数分别为：", n3, n4)
+        print("已生成填充符码表文件", fp)
 
     def set_quick_code(self, z_flag: bool=False):
         list_char_code_new = []
@@ -393,22 +422,22 @@ class SchemaYujoyFluid:
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    # myschema = SchemaYujoyFluid(
-    #     "material_yujoy",
-    #     "yujoy.full.dict_v3.6.0.yaml",
-    #     "schema_yujoy_fluid/dicts_yujoy_fluid",
-    #     "卿云",
-    #     "2.0"
-    # )
-    # myschema.build()
     myschema = SchemaYujoyFluid(
         "material_yujoy",
         "yujoy.full.dict_v3.6.0.yaml",
-        "schema_yujoy_fluid/dicts_yujoy_fluid_z",
+        "schema_yujoy_fluid/dicts_yujoy_fluid",
         "卿云",
         "2.0"
     )
-    myschema.build(True)  # z版
+    myschema.build()
+    # myschema = SchemaYujoyFluid(
+    #     "material_yujoy",
+    #     "yujoy.full.dict_v3.6.0.yaml",
+    #     "schema_yujoy_fluid/dicts_yujoy_fluid_z",
+    #     "卿云",
+    #     "2.0"
+    # )
+    # myschema.build(True)  # z版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
 
