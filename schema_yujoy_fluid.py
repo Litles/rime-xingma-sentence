@@ -58,8 +58,8 @@ class SchemaYujoyFluid:
         # 2.额外设“一三简”, 额外设“标记”字(即[2-9]重)
         # 以下两个操作都会修改 self.list_char_code
         self.set_quick_code(z_flag)   # 额外设“一三简”(若是z版则不设一简)
-        if not z_flag:
-            self.set_choice_mark()  # 额外设“标记”字(即[2-9]重)
+        # if not z_flag:
+        self.set_choice_mark()  # 额外设“标记”字(即[2-9]重)
 
         # 3.获取扩展字集, 生成单字码表(单字yaml码表文件)
         list_char_code_ext = []
