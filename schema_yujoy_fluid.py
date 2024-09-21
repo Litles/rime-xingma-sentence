@@ -99,13 +99,10 @@ class SchemaYujoyFluid:
             self.generate_dict_yaml_jianci()
 
         # 5.生成词库(词库yaml码表文件)
-        # 准备全部单字编码映射(一字可能有多个码), 顺便收集码位占用数据
-        occupied_codes = set()  # 三码或四码全码
+        # 准备全部单字编码映射(一字可能有多个码)
         dict_char_codes_new = defaultdict(set)  # 将包含简码在内
         for d in itertools.chain(self.list_char_code, list_char_code_ext):
             dict_char_codes_new[d["char"]].add(d["code"])
-            if "1" in d["code"]:
-                occupied_codes.add(d["code"].split("1")[0])
         # 开始处理生成词库 yaml 码表文件
         dir_in = "material_common/cn_dicts"
         dct = {
@@ -128,32 +125,6 @@ class SchemaYujoyFluid:
                     dict_meta,
                     self.dir_out
                 )
-
-        # 6.填充剩余的空码位，以单字码表的形式生成
-        self.generate_dict_yaml_none(occupied_codes)
-
-    def generate_dict_yaml_none(self, occupied_codes: set) -> None:
-        dict_name = "chars_none"
-        fp = os.path.join(self.dir_out, dict_name+".dict.yaml")
-        n3, n4 = 0, 0
-        with open(fp, 'w', encoding='utf-8') as fw:
-            yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·填充符号", f"填充所有空余码位，用于标识错误的输入")
-            fw.write(yaml_header)
-            fw.write("# --- 填充符号码表 ---\n")
-            for a in "abcdefghijklmnopqrstuvwxy":
-                for b in "abcdefghijklmnopqrstuvwxyz":
-                    for c in "abcdefghijklmnopqrstuvwxyz":
-                        code_len3 = a+b+c
-                        if code_len3 not in occupied_codes:  # 三码全码空余码位
-                            fw.write(f"⊗\t{code_len3}10\t0\n")
-                            n3 += 1
-                        for d in "abcdefghijklmnopqrstuvwxyz":
-                            code_len4 = code_len3+d
-                            if code_len4 not in occupied_codes:  # 四码全码空余码位
-                                fw.write(f"⊗\t{code_len4}1\t0\n")
-                                n4 += 1
-        print(f"共填充 {n3+n4} 空码位，三码和四码空码位数分别为：", n3, n4)
-        print("已生成填充符码表文件", fp)
 
     def set_quick_code(self, z_flag: bool=False):
         list_char_code_new = []
@@ -288,7 +259,8 @@ class SchemaYujoyFluid:
         print("有设简的字的最大候选位:", n_max_quick)
 
     def generate_dict_yaml_dz(self, list_char_code_ext: list) -> None:
-        # part 1
+        occupied_codes_len3 = set()  # 三码占用
+        # 1.part 1 (基础字集)
         dict_name = "chars"
         fp1 = os.path.join(self.dir_out, dict_name+".dict.yaml")
         with open(fp1, 'w', encoding='utf-8') as fw:
@@ -297,8 +269,11 @@ class SchemaYujoyFluid:
             fw.write("# --- 基础字集码表 ---\n")
             for d in self.list_char_code:
                 fw.write(f"{d['char']}\t{d['code']}\t{d['freq']}\n")
+                if d["code"].endswith("00"): # 三码简码, 混入了二码也没关系
+                    occupied_codes_len3.add(d["code"].rstrip("01"))
         print("已生成基础字集的单字码表文件", fp1)
-        # part 2
+        
+        # 2.part 2 (扩展字集)
         dict_name = "chars_ext"
         fp2 = os.path.join(self.dir_out, dict_name+".dict.yaml")
         with open(fp2, 'w', encoding='utf-8') as fw:
@@ -308,6 +283,25 @@ class SchemaYujoyFluid:
             for d in list_char_code_ext:
                 fw.write(f"[超集字]{d['char']}[超]\t{d['code']}\t{d['freq']}\n")
         print("已生成扩展字集的单字码表文件", fp2)
+        
+        # 3.part 3 (填充剩余的空码位，以单字码表的形式生成)
+        dict_name = "chars_none"
+        fp = os.path.join(self.dir_out, dict_name+".dict.yaml")
+        n3 = 0
+        with open(fp, 'w', encoding='utf-8') as fw:
+            yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·填充符号", f"填充所有空余码位，用于标识错误的输入")
+            fw.write(yaml_header)
+            fw.write("# --- 填充符号码表 ---\n")
+            for a in "abcdefghijklmnopqrstuvwxy":
+                for b in "abcdefghijklmnopqrstuvwxyz":
+                    for c in "abcdefghijklmnopqrstuvwxyz":
+                        code_len3 = a+b+c
+                        if code_len3 not in occupied_codes_len3:
+                            fw.write(f"⊗\t{code_len3}00\t0\n")
+                            fw.write(f"⊗\t{code_len3}10\t0\n")
+                            n3 += 1
+        print(f"共填充三码空码位数：", n3)
+        print("已生成填充符码表文件", fp)
 
     def generate_dict_yaml_jianci(self) -> None:
         # --- 0.计算已使用的码位, 剩余可用的码位 ---

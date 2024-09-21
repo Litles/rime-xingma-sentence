@@ -66,5 +66,5 @@ if __name__ == '__main__':
     #     "2.0"
     # )
     # myschema.build(True)  # z版
-    # myschema.generate_other_dicts()
+    myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
