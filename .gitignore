@@ -6,6 +6,7 @@ __pycache__/
 releases/
 tools/
 test/
+backup/
 # 自定义剔除文件列表
 *.sublime-workspace
 *.sublime-project

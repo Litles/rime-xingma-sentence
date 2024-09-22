@@ -115,7 +115,14 @@ def adjust_zhi_char_freq(dict_char_freq: dict) -> None:
     set_big5 = get_charset("字符集/Big5_汉字(包含兼容汉字).txt")
     set_tg = get_charset("字符集/G标_通规/通规（8105字）.txt")
     # set_gb2312 = get_charset("字符集/G标/GB2312汉字集.txt")  # GB2312中有少许繁体字(比如『後』)
-    set_big5_only = set_big5 - set_tg
+    # 获取繁体、异体字集 (合计6千多个)
+    with open("字符集/G标_通规/规范字与繁体字、异体字对照表.txt", 'r', encoding='utf-8') as fr:
+        str_all = ""
+        for line in fr:
+            line = line.strip().rsplit("\t", 1)[1]
+            str_all += re.sub(r"[\[\]\(\)\|]", "", line)
+        set_fanyi = set(str_all)
+    set_big5_only = (set_big5 | set_fanyi) - set_tg
     # 把通规和GB2312之外的字的字频调到6000名之外
     list_char_freq = [{"char": char, "freq": freq} for char, freq in dict_char_freq.items()]
     list_char_freq.sort(key=lambda d: d["freq"], reverse=True)
@@ -200,7 +207,7 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
     #     if len(chars) > 3: 
     #         print(code, "".join(chars))
 
-def get_charset(*files: str) -> set:
+def get_charset(*files: str) -> set[str]:
     str_charset = ""
     for file in files:
         with open(file, 'r', encoding='utf-8') as fr:
