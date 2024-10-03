@@ -26,8 +26,8 @@ class SchemaYujoyFluid:
         print("初始化中...")
         self.dir_in = dir_in
         self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full), full_only=False)  # 单字全码码表(大概100,000字)
-        self.file_quick1 = os.path.join(self.dir_in,"quick_len1.txt")  # 指定一简
-        self.file_quick2 = os.path.join(self.dir_in,"quick_len2_len3.txt")  # 指定二三简
+        self.file_quick1 = os.path.join(self.dir_in,"quick_chars.txt")  # 指定一二简(字符)
+        self.file_quick2 = os.path.join(self.dir_in,"quick_others.txt")  # 指定二三简(其它)
         self.list_char_code = []  # 将以包含 "char","code","freq" 三个键的 dict 为元素
         self.set_qc_char = set()  # 记录所设的简字
         # 子集和词频相关数据
@@ -57,7 +57,7 @@ class SchemaYujoyFluid:
 
         # 2.额外设“一三简”, 额外设“标记”字(即[2-9]重)
         # 以下两个操作都会修改 self.list_char_code
-        self.set_quick_code(z_flag)   # 额外设“一三简”(若是z版则不设一简)
+        self.set_quick_code(z_flag)   # 额外设“一二三简”(若是z版则不设一二简)
         # if not z_flag:
         self.set_choice_mark()  # 额外设“标记”字(即[2-9]重)
 
@@ -79,8 +79,8 @@ class SchemaYujoyFluid:
         print("\n---> 开始生成yaml词库文件...")
         self.generate_dict_yaml_dz(list_char_code_ext)
 
-        # 4.生成简词(一二三简)词库
-        if z_flag:
+        # 4.生成简词(二三简)词库
+        if z_flag:  # z版只设三简
             dict_name = "words_quick"
             file_out = os.path.join(self.dir_out, dict_name+".dict.yaml")
             with (
@@ -89,7 +89,7 @@ class SchemaYujoyFluid:
             ):
                 yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·简码词", "包含汉字词符号和字母数字")
                 fw.write(yaml_header)
-                # 加载预设(二三简词), 检查二简词(三简不检查)
+                # 加载预设(三简词), 三简不检查
                 for line in fr:
                     word, code = line.strip().split("\t")
                     if len(code) == 3 and code.startswith("z"):
@@ -99,11 +99,11 @@ class SchemaYujoyFluid:
             self.generate_dict_yaml_jianci()
 
         # 5.生成词库(词库yaml码表文件)
-        # 准备全部单字编码映射(一字可能有多个码)
+        # (1)准备全部单字编码映射(一字可能有多个码)
         dict_char_codes_new = defaultdict(set)  # 将包含简码在内
         for d in itertools.chain(self.list_char_code, list_char_code_ext):
             dict_char_codes_new[d["char"]].add(d["code"])
-        # 开始处理生成词库 yaml 码表文件
+        # (2)开始处理生成词库 yaml 码表文件
         dir_in = "material_common/cn_dicts"
         dct = {
             "base.dict.yaml": "words",
@@ -125,6 +125,21 @@ class SchemaYujoyFluid:
                     dict_meta,
                     self.dir_out
                 )
+        # (3)用户词库
+        file_in = "material_common/words_user.txt"
+        dict_meta = {
+            "name": "words_user",
+            "version": self.version,
+            "name_zh": f"三码{self.sname}·用户词",
+            "desc": "用于统一存放用户自定义生成的词"
+        }
+        generate_dict_yaml_ciku(
+            file_in,
+            dict_char_codes_new,
+            self.dict_word_freq,
+            dict_meta,
+            self.dir_out
+        )
 
     def set_quick_code(self, z_flag: bool=False):
         list_char_code_new = []
@@ -133,11 +148,11 @@ class SchemaYujoyFluid:
         dict_code_chars = compute_char_chongma(self.list_char_code, True)
         print("\n---> 开始设置简码...")
 
-        # 1.(可选)设置一简(对应的全码字频调为1)
+        # 1.(可选)设置一二简(一简对应全码字频调为1，二简不变)
         if z_flag:
             pass
         else:
-            self.set_quick_code_len1(list_char_code_new)
+            self.set_quick_code_len1_len2(list_char_code_new)
 
         # 2.设置"三简"(在3-4码字的范围只设一个，相应的全码字频调成该码组里的第2)
         set_qc3 = set()
@@ -182,29 +197,44 @@ class SchemaYujoyFluid:
                     "code": code,
                     "freq": d["freq"]
                 })
-        assert len(list_char_code_new) == len(self.list_char_code) + len(self.set_qc_char)
+        # assert len(list_char_code_new) == len(self.list_char_code) + len(self.set_qc_char) # 不再会相等
         self.list_char_code = list_char_code_new
 
-    def set_quick_code_len1(self, list_char_code_new: list) -> None:
-        print("开始设置一简...")
-        # 1.设置一简(对应的全码字频调为1)
+    def set_quick_code_len1_len2(self, list_char_code_new: list) -> None:
+        print("开始设置单字的一二简...")
+        # 1.读取自定义的单字一二简码
+        dict_char_code = {}
         with open(self.file_quick1, 'r', encoding='utf-8') as fr:
             for line in fr:
-                word = line.strip().split("\t")[0]
-                if len(word) == 1:
-                    self.set_qc_char.add(word)
+                char, code = line.strip().split("\t")
+                if len(char) == 1:  # 确保是单字
+                    dict_char_code[char] = code
+        # 2.设置一二简(一简对应全码字频调为1，二简不变)
         for d in self.list_char_code:
-            if d["char"] in self.set_qc_char:
-                list_char_code_new.append({
-                    "char": d["char"],
-                    "code": d["code"][0].ljust(5, "0"),
-                    "freq": d["freq"]
-                })
-                list_char_code_new.append({
-                    "char": d["char"],
-                    "code": (d["code"]+"1").ljust(5, "0"),
-                    "freq": 1
-                })
+            if d["char"] in dict_char_code:
+                # 一简对应全码字频调为1
+                if len(dict_char_code[d["char"]]) == 1:
+                    self.set_qc_char.add(d["char"])
+                    # 简码
+                    list_char_code_new.append({
+                        "char": d["char"],
+                        "code": dict_char_code[d["char"]]+"1000",
+                        "freq": d["freq"]
+                    })
+                    # 全码
+                    list_char_code_new.append({
+                        "char": d["char"],
+                        "code": (d["code"]+"1").ljust(5, "0"),
+                        "freq": 1
+                    })
+                # 二简字频不变，全码后面再加
+                elif len(dict_char_code[d["char"]]) == 2:
+                    # 简码
+                    list_char_code_new.append({
+                        "char": d["char"],
+                        "code": dict_char_code[d["char"]]+"100",
+                        "freq": d["freq"]
+                    })
         # 若不设一简，原三码阶段的重码情况
         # for d in list_char_code_new:
         #     code_full = d["code"].strip("01")
@@ -221,6 +251,7 @@ class SchemaYujoyFluid:
         #     code_full = next(d["code"] for d in self.list_char_code d["char"] == char)
         #     print("该一简原所在的全码组:", dict_code_chars[d["code"]])
         print("设置了一简的字数:", len(self.set_qc_char))
+        print("设置了二简的字数:", len(dict_char_code)-len(self.set_qc_char))
 
     def set_choice_mark(self):
         self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
@@ -311,7 +342,7 @@ class SchemaYujoyFluid:
         occupied_codes = set()  # 一码或两码
         dict_char_c1 = {}  # 每个单字的头一码
         for d in self.list_char_code:
-            if d["code"].endswith("0000"):   # 一简码位
+            if d["code"].endswith("1000"):   # 一简码位
                 set_qc1_char.add(d["char"])
                 occupied_codes.add(d["code"][0])
             elif d["code"].endswith("100"):  # 二简码位
@@ -398,9 +429,9 @@ class SchemaYujoyFluid:
     def generate_other_dicts(self):
         dir_in = "material_common"
         dct = {
-            "idioms.txt": ("zwords_idioms", f"三码{self.sname}·成语名句", "数据源自《现代汉语词典》、《现代汉语句典》、《中华句典大全集》"),
-            "poems.txt": ("zwords_poems", f"三码{self.sname}·古诗词","数据源自《宋词鉴赏大典》、《唐诗三百首便览》、《唐诗宋词全鉴 典藏版》、《唐诗鉴赏辞典》"),
-            "user.txt": ("words_user", f"三码{self.sname}·用户词","用于统一存放用户自定义生成的词")
+            "zwords_idioms.txt": ("zwords_idioms", f"三码{self.sname}·成语名句", "数据源自《现代汉语词典》、《现代汉语句典》、《中华句典大全集》"),
+            "zwords_poems.txt": ("zwords_poems", f"三码{self.sname}·古诗词","数据源自《宋词鉴赏大典》、《唐诗三百首便览》、《唐诗宋词全鉴 典藏版》、《唐诗鉴赏辞典》"),
+            "zwords_others.txt": ("zwords_others", f"三码{self.sname}·其他杂项","包含人名地名等专有名词"),
         }
         for fname in os.listdir(dir_in):
             if fname in dct:
@@ -410,7 +441,7 @@ class SchemaYujoyFluid:
                 with open(file_out, 'w', encoding='utf-8') as fw:
                     fw.write(yaml_header)
                     for d in get_encoded_words(file_in, self.dict_char_codes):
-                        fw.write(f"{d['word']}\tz{d['code']}\t3\n")  # 添加z前缀
+                        fw.write(f"{d['word']}\tz{d['code']}\t{self.dict_word_freq.get(d['word'],2)}\n")  # 添加z前缀
                 print("已生成文件", file_out)
 
 if __name__ == '__main__':
@@ -421,7 +452,7 @@ if __name__ == '__main__':
         "yujoy.full.dict_v3.6.0.yaml",
         "schema_yujoy_fluid/dicts_yujoy_fluid",
         "卿云",
-        "2.0"
+        "2.1"
     )
     myschema.build()
     # myschema = SchemaYujoyFluid(
@@ -429,7 +460,7 @@ if __name__ == '__main__':
     #     "yujoy.full.dict_v3.6.0.yaml",
     #     "schema_yujoy_fluid/dicts_yujoy_fluid_z",
     #     "卿云",
-    #     "2.0"
+    #     "2.1"
     # )
     # myschema.build(True)  # z版
     myschema.generate_other_dicts()
@@ -446,6 +477,8 @@ if __name__ == '__main__':
  *    一简: 一简的相应全码编码字频调为1
  --- 2.标记 ---
  * (经过以下规则后, 不足5码的补0，即所有字都统一5码，这方便给4码字标记选重)
+ * 1码编码:
+ *    全码1码: 一律标记1(格式如"a1000", 补“_”出)，不存在"a0000"这种编码
  * 2码编码:
  *    全码2码: 一律标记1(格式如"aa100", 补“_”出)，不存在"aa000"这种编码。(当然，有重会可能会标记2-9)
  * 3码编码:

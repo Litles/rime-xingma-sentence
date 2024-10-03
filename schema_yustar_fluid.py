@@ -55,7 +55,7 @@ if __name__ == '__main__':
         "yustar.full.dict_v3.6.0.yaml",
         "schema_yustar_fluid/dicts_yustar_fluid",
         "星陈",
-        "2.0"
+        "2.1"
     )
     myschema.build()
     # myschema = SchemaYustarFluid(
@@ -63,7 +63,7 @@ if __name__ == '__main__':
     #     "yustar.full.dict_v3.6.0.yaml",
     #     "schema_yustar_fluid/dicts_yustar_fluid_z",
     #     "星陈",
-    #     "2.0"
+    #     "2.1"
     # )
     # myschema.build(True)  # z版
     myschema.generate_other_dicts()
