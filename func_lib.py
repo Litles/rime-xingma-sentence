@@ -123,7 +123,7 @@ def adjust_zhi_char_freq(dict_char_freq: dict) -> None:
             str_all += re.sub(r"[\[\]\(\)\|]", "", line)
         set_fanyi = set(str_all)
     set_big5_only = (set_big5 | set_fanyi) - set_tg
-    # 把通规和GB2312之外的字的字频调到6000名之外
+    # 把通规和GB2312之外的字频调到6000名之外
     list_char_freq = [{"char": char, "freq": freq} for char, freq in dict_char_freq.items()]
     list_char_freq.sort(key=lambda d: d["freq"], reverse=True)
     bar = list_char_freq[5999]["freq"]
@@ -136,6 +136,24 @@ def adjust_zhi_char_freq(dict_char_freq: dict) -> None:
     for char in set_big5_only:
         if dict_char_freq.get(char, 2) >= 3:
             dict_char_freq[char] = max(int(dict_char_freq[char] / divisor), 3)
+    print("已调整繁体字字频个数:", len(set_big5_only))
+
+    # 3.调生僻字, 检查是否有本应5000开外(根据另一张字频表)的却在前3000
+    list_char_freq = [{"char": char, "freq": freq} for char, freq in dict_char_freq.items()]
+    list_char_freq.sort(key=lambda d: d["freq"], reverse=True)
+    set_after5000 = get_charset("字词频/25亿字频表_5000之后.txt")
+    set_after5000 -= set("怼熵薅咩吖欸粿焗焯蚝馕齁烷垚")
+    set_after5000_proc = set()  # 实际需要处理的部分
+    for i in range(3000):
+        char = list_char_freq[i]["char"]
+        if char in set_after5000:
+            set_after5000_proc.add(char)
+    # 开始处理
+    bar = list_char_freq[4999]["freq"]
+    for char in set_after5000_proc:
+        if dict_char_freq.get(char, 2) >= 3:
+            dict_char_freq[char] = bar - 1
+    print("已调整生僻字字频个数:", len(set_after5000_proc))
 
 def generate_dict_file_with_freq(file_in: str, file_freq: str) -> None:
     """为词库匹配词频，生成带词频的文件
