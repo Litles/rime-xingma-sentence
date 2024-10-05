@@ -201,14 +201,16 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
         str(sum(1 for code in dct if len(dct[code]) == 2))+"=",
         str(sum(1 for code in dct if len(dct[code]) == 2 and len(code) == 2))+"(2)",
         str(sum(1 for code in dct if len(dct[code]) == 2 and len(code) == 3))+"(3)",
-        str(sum(1 for code in dct if len(dct[code]) == 2 and len(code) == 4))+"(4)"
+        str(sum(1 for code in dct if len(dct[code]) == 2 and len(code) == 4))+"(4)",
+        str(sum(1 for code in dct if len(dct[code]) == 2 and len(code) == 5))+"(5)"
     )
     print(
         "三重(组数):",
         str(sum(1 for code in dct if len(dct[code]) == 3))+"=",
         str(sum(1 for code in dct if len(dct[code]) == 3 and len(code) == 2))+"(2)",
         str(sum(1 for code in dct if len(dct[code]) == 3 and len(code) == 3))+"(3)",
-        str(sum(1 for code in dct if len(dct[code]) == 3 and len(code) == 4))+"(4)"
+        str(sum(1 for code in dct if len(dct[code]) == 3 and len(code) == 4))+"(4)",
+        str(sum(1 for code in dct if len(dct[code]) == 3 and len(code) == 5))+"(5)"
     )
     print("四重以上(组数):", sum(1 for code in dct if len(dct[code]) > 3))
     print("最大重数:", max(len(dct[code]) for code in dct))

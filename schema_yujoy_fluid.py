@@ -6,6 +6,7 @@
 # @Version : 1.0
 
 import os
+import re
 from collections import defaultdict
 import itertools
 from mabiao_utils import get_encoded_words
@@ -55,11 +56,10 @@ class SchemaYujoyFluid:
                 if len(d["code"]) == 2:
                     d["code"] = d["code"] + "z"
 
-        # 2.额外设“一三简”, 额外设“标记”字(即[2-9]重)
+        # 2.额外设“一二三简”, 全码多重设“标记”(即[2-9]重)，三连击设兼容码
         # 以下两个操作都会修改 self.list_char_code
         self.set_quick_code(z_flag)   # 额外设“一二三简”(若是z版则不设一二简)
-        # if not z_flag:
-        self.set_choice_mark()  # 额外设“标记”字(即[2-9]重)
+        self.set_choice_mark()  # 全码多重设“标记”(即[2-9]重)
 
         # 3.获取扩展字集, 生成单字码表(单字yaml码表文件)
         list_char_code_ext = []
@@ -145,7 +145,6 @@ class SchemaYujoyFluid:
         list_char_code_new = []
         # 0.按词频排序(从高到低)
         self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
-        dict_code_chars = compute_char_chongma(self.list_char_code, True)
         print("\n---> 开始设置简码...")
 
         # 1.(可选)设置一二简(一简对应全码字频调为1，二简不变)
@@ -154,12 +153,42 @@ class SchemaYujoyFluid:
         else:
             self.set_quick_code_len1_len2(list_char_code_new)
 
-        # 2.设置"三简"(在3-4码字的范围只设一个，相应的全码字频调成该码组里的第2)
+        # 2.含三连击的字添加兼容码(省一击, 不足三码补v)
+        set_tri_char = set() # 三连击的字
+        list_char_code_temp0 = []  # 原编码
+        list_char_code_temp = []  # 兼容编码
+        pat = re.compile(r"([a-z])\1\1")
+        for d in self.list_char_code:
+            mth = pat.search(d["code"])
+            if mth:
+                c = d["code"].replace(mth.group(0), mth.group(0)[:2])
+                if len(c) == 2:
+                    c += "v"
+                list_char_code_temp0.append({
+                    "char": d["char"],
+                    "code": d["code"],
+                    "freq": d["freq"]
+                })
+                list_char_code_temp.append({
+                    "char": d["char"],
+                    "code": c,
+                    "freq": d["freq"]
+                })
+                d["code"] = c
+                set_tri_char.add(d["char"])
+        self.list_char_code += list_char_code_temp0
+        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
+        print("添加了兼容码的三连击字数:", len(set_tri_char))
+
+        # 3.设置"三简"(在3-4码字的范围只设一个，相应的全码字频调成该码组里的第2)
+        dict_code_chars = compute_char_chongma(self.list_char_code, True)
         set_qc3 = set()
+        dict_code_char_temp = {}
         n_qc3_char = 0
+        set_temp = set()
         for d in self.list_char_code:
             # 由于列表已排好序, 那么首次满足该条件的便是最高频字
-            if len(d["code"]) >= 3 and (d["char"] not in self.set_qc_char) and (d["code"][:3] not in set_qc3):
+            if len(d["code"]) >= 3 and (d["code"][:3] not in set_qc3) and (d["char"] not in self.set_qc_char):
                 # a.设简
                 list_char_code_new.append({
                     "char": d["char"],
@@ -183,14 +212,26 @@ class SchemaYujoyFluid:
                     "freq": freq
                 })
                 n_qc3_char += 1
-                set_qc3.add(d["code"][:3])
-                self.set_qc_char.add(d["char"])
+                set_qc3.add(d["code"][:3])  # 收集简码
+                dict_code_char_temp[d["code"]] = d["char"]  # 收集原全码映射
+                set_temp.add(d["char"])  # 收集设简的字
+        self.set_qc_char |= set_temp
         assert n_qc3_char == len(set_qc3)  # 检查一个前三码是否只设置了一个"简"
         print("设置了“三简”的字数:", n_qc3_char)  # 10,233 (rc5)
 
-        # 3.补充剩余部分
+        # 4.补充剩余部分
+        # (a)未设简的三连击全码
+        for d in itertools.chain(list_char_code_temp0, list_char_code_temp):
+            if not (d["code"] in dict_code_char_temp and dict_code_char_temp[d["code"]] == d["char"]):
+                code = (d["code"]+"1").ljust(5, "0")
+                list_char_code_new.append({
+                    "char": d["char"],
+                    "code": code,
+                    "freq": d["freq"]
+                })
+        # (b)其他
         for d in self.list_char_code:
-            if (d["char"] not in self.set_qc_char):
+            if not (d["char"] in self.set_qc_char or d["char"] in set_tri_char):
                 code = (d["code"]+"1").ljust(5, "0")
                 list_char_code_new.append({
                     "char": d["char"],
@@ -267,26 +308,32 @@ class SchemaYujoyFluid:
         n_max_quick = 1
         # d_max_quick = {}
         # n_max_chars = ""
-        lst_2to9_mark = []
+        dict_2to9_mark = {}  # 用于收集标记结果
+        lst_len = len(self.list_char_code)
         for code, chars in dict_code_chars.items():
             if len(chars) > 1:
                 # 由于 self.list_char_code 已排好序, 因而第一个匹配到的便是最高频的那个(不标记)
                 n = 0
-                for d in self.list_char_code:
+                for i in range(lst_len):
+                    d = self.list_char_code[i]
                     if d["code"] == code:  # code中一定包含标记"1"
                         n += 1
                         if n >= 2:
-                            lst_2to9_mark.append({
+                            # 收集重码标记(每次的i肯定不一样)
+                            dict_2to9_mark[i] = {
                                 "char": d["char"],
                                 "code": d["code"].replace("1", str(min(n,9)), 1),  # 不超过9
                                 "freq": d["freq"]
-                            })
+                            }
                             if d["char"] in self.set_qc_char and n > n_max_quick:
                                 n_max_quick = n
                                 # d_max_quick = d  # 取样一个
                                 # if n_max_quick == 4:  # 收集最远的那些
                                 #     n_max_chars += d["char"]
-        self.list_char_code += lst_2to9_mark  # 最终的单字码表，一个字最多可能有3种编码
+        # 应用标记结果到原码表
+        for i in range(lst_len):
+            if i in dict_2to9_mark:
+                self.list_char_code[i] = dict_2to9_mark[i]
         print("有设简的字的最大候选位:", n_max_quick)
 
     def generate_dict_yaml_dz(self, list_char_code_ext: list) -> None:
@@ -472,20 +519,21 @@ if __name__ == '__main__':
  --- 1.字频 ---
  * 字频: 有频的最小3, 无频的设默认值2(常规最小), 有设简的全码字频调到第二, 3万字以外的(超集)一律设值0
  * 设简: 
- *    三简: 4码字设三简的条件是最高频(在以前3码开头的所有字中最高), (相应全码编码字频调到第二)
- *    二简: 若有空余的码位可设置二简词或标点符号等
+ *    三简: 4码字设三简的条件是最高频(在前3码开头的所有字中最高), (相应全码编码字频调到第二)
+ *    二简: 自定义二简字(后一码为a或k, 个别可能为do), 剩余空码位可设置二简词或标点符号等
  *    一简: 一简的相应全码编码字频调为1
+ * 兼容码: 含三连击的字添加兼容码(省一击, 结果不足三码补v)
  --- 2.标记 ---
  * (经过以下规则后, 不足5码的补0，即所有字都统一5码，这方便给4码字标记选重)
  * 1码编码:
- *    全码1码: 一律标记1(格式如"a1000", 补“_”出)，不存在"a0000"这种编码
+ *    全码1码: 无重，只有标记1(格式如"a1000", 补“_”出)，不存在"a0000"这种编码
  * 2码编码:
- *    全码2码: 一律标记1(格式如"aa100", 补“_”出)，不存在"aa000"这种编码。(当然，有重会可能会标记2-9)
+ *    全码2码: 按词频依次标记1-9(格式如"aa100", 补“_”出；如"aa200", 补“__”出)，不存在"aa000"这种编码
  * 3码编码:
  *    简码3码: 不标(格式如"aaa00", 因为已经最高频, 且与全码区分)
- *    全码3码: 一律标记1(格式如"aaa10"，补“/”出), 有多重的话会按词频排名分别额外设置2-9的标记版编码
+ *    全码3码: 按词频依次标记1-9(格式如"aaa10", 补“/”出；如"aaa20", 补“/_”出)
  * 4码编码:
- *    全码4码：一律标记1(补“/”出), 有多重的话会按词频排名分别额外设置2-9的标记版编码
+ *    全码4码：按词频依次标记1-9(格式如"aaaa1", 补“/”出；如"aaaa2", 补“/_”出)，不存在"aaaa0"这种编码
  --- 3.组词 ---
- * 组词: 所有单字的各种编码都参与组词，一个单字最多可能有三种编码(简码，全码标1，全码标2-9)
+ * 组词: 所有单字的各种编码都参与组词，一个单字最多可能有5种编码(一或二简，三简，全码标1-9, 兼容码三简，兼容码全码)，常规最多应是4种
 """
