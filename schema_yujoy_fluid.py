@@ -26,7 +26,7 @@ class SchemaYujoyFluid:
         # 输入
         print("初始化中...")
         self.dir_in = dir_in
-        self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full), full_only=False)  # 单字全码码表(大概100,000字)
+        self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full))  # 单字全码码表(大概100,000字)
         self.file_quick1 = os.path.join(self.dir_in,"quick_chars.txt")  # 指定一二简(字符)
         self.file_quick2 = os.path.join(self.dir_in,"quick_others.txt")  # 指定二三简(其它)
         self.list_char_code = []  # 将以包含 "char","code","freq" 三个键的 dict 为元素
@@ -43,22 +43,26 @@ class SchemaYujoyFluid:
         if not os.path.exists(self.dir_out):
             os.makedirs(self.dir_out)
 
-    def build(self, z_flag: bool=False) -> None:
+    def build(self, za_flag: str="") -> None:
         adjust_zhi_char_freq(self.dict_char_freq) # 微调原字频
         # 1.匹配基本字集所有汉字的编码
         self.list_char_code = combine_code_and_freq(self.dict_char_codes, self.dict_char_freq, self.set_base)
         n_chars = len(self.set_base)
         if len(self.list_char_code) == n_chars:
             print(f"成功匹配基本集全部 {n_chars} 字的编码")  # 27,711
-        # (z版)修改两码全码字(即字根)成三码全码
-        if z_flag:
+        # (z/a版)修改两码全码字(即字根)成三码全码
+        if za_flag == "Z":
             for d in self.list_char_code:
                 if len(d["code"]) == 2:
-                    d["code"] = d["code"] + "z"
+                    d["code"] += "z"
+        elif za_flag == "A":
+            for d in self.list_char_code:
+                if len(d["code"]) == 2:
+                    d["code"] += d["code"][1]
 
         # 2.额外设“一二三简”, 全码多重设“标记”(即[2-9]重)，三连击设兼容码
         # 以下两个操作都会修改 self.list_char_code
-        self.set_quick_code(z_flag)   # 额外设“一二三简”(若是z版则不设一二简)
+        self.set_quick_code(za_flag)   # 额外设“一二三简”(若是z/a版则不设一二简)
         self.set_choice_mark()  # 全码多重设“标记”(即[2-9]重)
 
         # 3.获取扩展字集, 生成单字码表(单字yaml码表文件)
@@ -66,8 +70,10 @@ class SchemaYujoyFluid:
         for char, code in self.dict_char_codes.items():
             if char not in self.set_base:
                 str_code = list(code)[0]
-                if z_flag and len(str_code) == 2:  # (z版)两码字补充后置z
+                if len(str_code) == 2 and za_flag == "Z":  # (z版)两码字补充z
                     str_code = (str_code+"z1").ljust(5, "0")
+                elif len(str_code) == 2 and za_flag == "A":  # (a版)两码字补充小码
+                    str_code = (str_code+str_code[1]+"1").ljust(5, "0")
                 else:
                     str_code = (str_code+"1").ljust(5, "0")
                 list_char_code_ext.append({
@@ -80,7 +86,7 @@ class SchemaYujoyFluid:
         self.generate_dict_yaml_dz(list_char_code_ext)
 
         # 4.生成简词(二三简)词库
-        if z_flag:  # z版只设三简
+        if za_flag:  # z/a版只设三简
             dict_name = "words_quick"
             file_out = os.path.join(self.dir_out, dict_name+".dict.yaml")
             with (
@@ -92,7 +98,7 @@ class SchemaYujoyFluid:
                 # 加载预设(三简词), 三简不检查
                 for line in fr:
                     word, code = line.strip().split("\t")
-                    if len(code) == 3 and code.startswith("z"):
+                    if len(code) == 3:
                         fw.write(f"{word}\t{code}00\t0\n")
             print("处理完毕，结果文件:", file_out)
         else:
@@ -141,14 +147,14 @@ class SchemaYujoyFluid:
             self.dir_out
         )
 
-    def set_quick_code(self, z_flag: bool=False):
+    def set_quick_code(self, za_flag: str=""):
         list_char_code_new = []
         # 0.按词频排序(从高到低)
         self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
         print("\n---> 开始设置简码...")
 
         # 1.(可选)设置一二简(一简对应全码字频调为1，二简不变)
-        if z_flag:
+        if za_flag:
             pass
         else:
             self.set_quick_code_len1_len2(list_char_code_new)
@@ -398,7 +404,7 @@ class SchemaYujoyFluid:
             dict_char_c1[d["char"]] = d["code"][0]
         # 剩余可用的码位
         vacant_codes_len2 = set()
-        for a in "abcdefghijklmnopqrstuvwxy":
+        for a in "abcdefghijklmnopqrstuvwxyz":
             for b in "abcdefghijklmnopqrstuvwxyz":
                 code_len2 = a+b
                 if code_len2 not in occupied_codes:  # 没有被二简字占用
@@ -509,7 +515,7 @@ if __name__ == '__main__':
     #     "卿云",
     #     "2.1"
     # )
-    # myschema.build(True)  # z版
+    # myschema.build("Z")  # z版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
 
