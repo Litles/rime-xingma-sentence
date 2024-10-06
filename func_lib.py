@@ -87,18 +87,20 @@ def combine_code_and_freq(dict_char_codes: dict, dict_word_freq: dict, charset: 
     if charset:
         for char, code in dict_char_codes.items():
             if char in charset:
-                list_char_freq.append({
-                    "char": char,
-                    "code": list(code)[0], # 只取一个编码
-                    "freq": dict_word_freq.get(char, 2)
-                })
+                for c in code:
+                    list_char_freq.append({
+                        "char": char,
+                        "code": c,
+                        "freq": dict_word_freq.get(char, 2)
+                    })
     else:
         for char, code in dict_char_codes.items():
-            list_char_freq.append({
-                "char": char,
-                "code": list(code)[0],
-                "freq": dict_word_freq.get(char, 2)
-            })
+            for c in code:
+                list_char_freq.append({
+                    "char": char,
+                    "code": c,
+                    "freq": dict_word_freq.get(char, 2)
+                })
     return list_char_freq
 
 def adjust_zhi_char_freq(dict_char_freq: dict) -> None:

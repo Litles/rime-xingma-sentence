@@ -19,5 +19,6 @@ maintain_scripts/
 old_versions/
 schema_*/
 词典/*
+参考/
 !词典/现代汉语词典（第七版）.txt
 !词典/教育部重編國語辭典（第五版）.txt
