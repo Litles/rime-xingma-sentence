@@ -29,5 +29,5 @@ if __name__ == '__main__':
     #     "虎码",
     #     "2.1"
     # )
-    # myschema.build("A")  # A版
+    # myschema.build("A")  # a版
     print("\nRuntime:", time.perf_counter() - start)
