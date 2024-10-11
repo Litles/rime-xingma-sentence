@@ -50,11 +50,13 @@ def load_word_freq(file: str) -> dict:
         return dict_word_freq
 
 
-def load_char_code(*files: str, full_only: bool= True) -> dict:
+def load_char_code(*files: str, full_only: bool = True, clen: int = 0) -> dict:
     """加载单字码表
     
     Args:
         files (str): 单字码表文件(可以提供多个)
+        full_only (bool): 是否只保留最全的编码(不影响兼容码)
+        clen (int): 截取编码长度
     
     Returns:
         dict: 以单字为键，以由编码构成的set为值
@@ -69,7 +71,11 @@ def load_char_code(*files: str, full_only: bool= True) -> dict:
                     if len(code_new) == 1:
                         print("不支持一简:", line, end="")
                         continue
-                    # code_new = code_new[:4]
+                    if clen:
+                        if clen > 0:
+                            code_new = code_new[:clen]  # 只取前|clen|码
+                        else:
+                            code_new = code_new[clen:]  # 只取后|clen|码
                     # 2.开始处理 (只保留最全的编码, 支持一字多码, 比如有容错码)
                     if full_only and char in dict_char_codes:
                         for code in dict_char_codes[char]:
