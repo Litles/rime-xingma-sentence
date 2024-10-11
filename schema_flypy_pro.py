@@ -141,13 +141,12 @@ if __name__ == '__main__':
     # 白霜(frost)词库
     dir_in = "material_common/cn_dicts"  # tencent.dict.yaml
     files_in = ['8105.dict.yaml', '41448.dict.yaml', 'base.dict.yaml', 'ext.dict.yaml', 'others.dict.yaml']
-    # files_in = ['others.dict.yaml']
     # (待生成) 形码整句版词库
     dir_out = "schema_flypy_pro/dicts_flypy_pro"
     if not os.path.exists(dir_out):
         os.makedirs(dir_out)
-    files_out = ['chars.dict.yaml', 'chars_ext.dict.yaml', 'words.dict.yaml', 'words_ext.dict.yaml', 'words_ext2.dict.yaml']
-    # files_out = ['words_ext2.dict.yaml']
+    files_out = ['8105.dict.yaml', '41448.dict.yaml', 'base.dict.yaml', 'ext.dict.yaml', 'others.dict.yaml']
+    # files_out = ['chars.dict.yaml', 'chars_ext.dict.yaml', 'words.dict.yaml', 'words_ext.dict.yaml', 'words_ext2.dict.yaml']
 
     # 2.开始处理
     for i in range(len(files_in)):
