@@ -8,6 +8,7 @@ tools/
 test/
 backup/
 english/
+Litles/
 # 自定义剔除文件列表
 *.sublime-workspace
 *.sublime-project
