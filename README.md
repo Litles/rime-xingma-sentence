@@ -8,15 +8,15 @@
 
 
 ## 方案使用预览
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/images/bing_deng.png)
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/bing_deng.png)
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/images/libaneng_baozha.png)
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/libaneng_baozha.png)
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/images/shisiwu_guihua.png)
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/shisiwu_guihua.png)
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/images/yuhao_shurufa.png)
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/yuhao_shurufa.png)
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/images/shengpizi.png)
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/shengpizi.png)
 
 
 ## 已开发支持的形码
