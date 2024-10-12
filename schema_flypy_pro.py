@@ -122,7 +122,7 @@ class SchemaFlypyPro:
                     for pair in itertools.product(*lst_set_sup):
                         codes = []
                         for i in range(len(lst_double_pinyin)):
-                            codes.append(lst_double_pinyin[i] + pair[i])
+                            codes.append(lst_double_pinyin[i] + pair[i] + '0')
                         lst_codes.append(codes)
                     # (b)匹配词频
                     for codes in lst_codes:
