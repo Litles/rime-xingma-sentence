@@ -22,6 +22,7 @@ class SchemaYustarFluid(SchemaYujoyFluid):
         self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full), full_only=False)  # 单字全码码表(大概100,000字)
         self.file_quick1 = os.path.join(self.dir_in,"quick_chars.txt")  # 指定一二简(字符)
         self.file_quick2 = os.path.join(self.dir_in,"quick_others.txt")  # 指定二三简(其它)
+        self.file_quick3 = os.path.join(self.dir_in,"quick_special.txt")  # 指定二三简(其它)
         self.list_char_code = []  # 将以包含 "char","code","freq" 三个键的 dict 为元素
         self.set_qc_char = set()  # 记录所设的简字
         # 子集和词频相关数据
@@ -79,7 +80,7 @@ if __name__ == '__main__':
         "yustar.full.dict_v3.6.0.yaml",
         "schema_yustar_fluid/dicts_yustar_fluid",
         "星陈",
-        "2.1"
+        "2.2"
     )
     myschema.build()
     # myschema = SchemaYustarFluid(
@@ -87,8 +88,8 @@ if __name__ == '__main__':
     #     "yustar.full.dict_v3.6.0.yaml",
     #     "schema_yustar_fluid/dicts_yustar_fluid_z",
     #     "星陈",
-    #     "2.1"
+    #     "2.2"
     # )
-    # myschema.build(True)  # z版
+    # myschema.build("Z")  # z版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)

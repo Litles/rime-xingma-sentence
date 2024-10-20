@@ -19,7 +19,7 @@ if __name__ == '__main__':
         "wubi06_char_full.txt",
         "schema_wubi06_fluid/dicts_wubi06_fluid",
         "新世纪五笔",
-        "2.1"
+        "2.2"
     )
     myschema.build()
     # myschema = SchemaWubi06Fluid(
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     #     "wubi06_char_full.txt",
     #     "schema_wubi06_fluid/dicts_wubi06_fluid_a",
     #     "新世纪五笔",
-    #     "2.1"
+    #     "2.2"
     # )
     # myschema.build("A")  # A版
     myschema.generate_other_dicts()

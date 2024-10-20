@@ -19,7 +19,7 @@ if __name__ == '__main__':
         "tiger.dict.yaml",
         "schema_tiger_fluid/dicts_tiger_fluid",
         "虎码",
-        "2.1"
+        "2.2"
     )
     myschema.build()
     # myschema = SchemaTigerFluid(
@@ -27,7 +27,7 @@ if __name__ == '__main__':
     #     "tiger.dict.yaml",
     #     "schema_tiger_fluid/dicts_tiger_fluid_a",
     #     "虎码",
-    #     "2.1"
+    #     "2.2"
     # )
     # myschema.build("A")  # a版
     print("\nRuntime:", time.perf_counter() - start)

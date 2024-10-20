@@ -21,7 +21,8 @@ class SchemaFlypyPro:
         # 2.取两码形码作为辅助码
         self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full)) # 单字全码, 加参数len=2则是取前两码
         # (a)分析每个汉字的字根数
-        file_chaifen = "material_yujoy/yujoy_chaifen_v3.6.0.dict.yaml"
+        file_chaifen = "material_yujoy/yujoy_chaifen_v3.6.0.dict.yaml"  # 卿云
+        # file_chaifen = "material_yustar/yustar_chaifen_v3.6.0.dict.yaml"  # 星陈
         dict_char_len = {}  # 每个汉字的字根数
         with open(file_chaifen, 'r', encoding='utf-8') as fr:
             pat = re.compile(r"({[^\}]+})")
@@ -166,6 +167,7 @@ if __name__ == '__main__':
         'iao': 'n',
         'ian': 'm',
     }
+    # 卿云
     myschema = SchemaFlypyPro(
         "material_yujoy",
         "yujoy.full.dict_v3.6.0.yaml",
@@ -173,6 +175,14 @@ if __name__ == '__main__':
         map_shengmu,
         map_yunmu
     )
+    # # 星陈
+    # myschema = SchemaFlypyPro(
+    #     "material_yustar",
+    #     "yustar.full.dict_v3.6.0.yaml",
+    #     "schema_flypy_pro2/dicts_flypy_pro",
+    #     map_shengmu,
+    #     map_yunmu
+    # )
     myschema.build()
 
     print("\nRuntime:", time.perf_counter() - start)

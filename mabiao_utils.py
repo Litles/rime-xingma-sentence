@@ -5,6 +5,7 @@
 # @Link    : https://github.com/Litles
 # @Version : 1.0
 
+from collections import defaultdict
 import os
 import re
 import itertools
@@ -59,6 +60,32 @@ def get_encoded_words(file_in: str, dict_char_codes: dict, len_min: int=-1, filt
                     if len(word_pure) >= len_min:
                         for code in encode(word_pure, dict_char_codes):
                             list_word_code.append({"word": word, "code": code})
+    return list_word_code
+
+
+def get_encoded_words_en(file_in: str) -> list:
+    """ 只支持4个字母以上的词组 """
+    list_word_code = []
+    letters = "zyxwvutsrqponmlkjihgfedcbaABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    charset = set(letters+" -+:/0123456789.")
+    punc_pat = re.compile(r"[\-+:/0123456789\.]")
+    with open(file_in, 'r', encoding='utf-8') as fr:
+        for line in fr:
+            word = line.strip()
+            if word:
+                word_pure = punc_pat.sub("", word)
+                if not word_pure:
+                    continue
+                if (not set(word_pure).issubset(charset)) or len(word_pure) < 4:
+                    print("该词中包含未能识别的字符或不足4个字母，已跳过：", word)
+                    with open('encode_error_words.txt', 'a', encoding='utf-8') as fa:
+                        fa.write(word + "\n")
+                else:
+                    if " " in word_pure:
+                        c_end = word_pure.rsplit(" ", 1)[-1][0].lower()
+                        list_word_code.append({"word": word, "code": word_pure[:3].lower()+c_end})
+                    else:
+                        list_word_code.append({"word": word, "code": word_pure[:3].lower()+word_pure[-1].lower()})
     return list_word_code
 
 def sort_mabiao_file(file_in: str, dict_word_freq: dict) -> None:

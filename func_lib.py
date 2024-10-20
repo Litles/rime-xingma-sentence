@@ -232,8 +232,9 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
     #         print(code, "".join(chars))
     # print("--- 四重以上明细 ---")
     # for code, chars in dct.items():
-    #     if len(chars) > 3: 
-    #         print(code, "".join(chars))
+    #     if len(chars) > 3:
+    #         print(code, "\n".join(chars))
+    #         # break  # 只展示一个样例
 
 def get_charset(*files: str) -> set[str]:
     str_charset = ""
@@ -244,28 +245,31 @@ def get_charset(*files: str) -> set[str]:
     return set(str_charset)
 
 def compute_char_chongma(list_char_code: list, print_flag: bool = False, charset: set = set()) -> dict:
-    """统计单字重码情况
+    """统计单字/词组码情况
     
     Args:
-        list_char_code (list): 以dict(有"char"和"code"两个键)为元素的list
+        list_char_code (list): 以dict(有"char"/"word"和"code"两个键)为元素的list
         print_flag (bool, optional): 是否打印统计结果, 默认False不打印
         file_charset (str, optional): 传入字符集文件则表示要限定分析的字符集范围, 默认不限定
     
     Returns:
         dict: 以编码(比如"abcd")为键, 以字符列表(比如["我", "你"])为值
     """
+    label = "char"
+    if "word" in list_char_code[0]:
+        label = "word"
     # 1.统计
     if charset:
         # 开始统计(圈定分析范围)
         dict_code_chars = defaultdict(list)
         for d in list_char_code:
             if d["char"] in charset:
-                dict_code_chars[d["code"]].append(d["char"])
+                dict_code_chars[d["code"]].append(d[label])
     else:
         # 开始统计
         dict_code_chars = defaultdict(list)
         for d in list_char_code:
-                dict_code_chars[d["code"]].append(d["char"])
+            dict_code_chars[d["code"]].append(d[label])
     # 2.输出统计结果
     if print_flag:
         print_chongma_statis(dict_code_chars)
@@ -277,8 +281,9 @@ def generate_dict_yaml_ciku(
         dict_char_codes: dict,
         dict_word_freq: dict = dict(),
         dict_meta: dict = dict(),
-        dir_out: str = ""
-    ) -> None:
+        dir_out: str = "",
+        words: set = set()
+    ) -> tuple:
     # 1.get yaml header
     meta_default = {
         "name": "xxx",
@@ -298,16 +303,16 @@ def generate_dict_yaml_ciku(
         os.makedirs(dir_out)
     file_out = os.path.join(dir_out, dict_meta["name"]+".dict.yaml")
     # 3.start to convert
-    convert_dict_yaml_file(file_in, file_out, dict_char_codes, dict_word_freq, yaml_header)
-
+    return convert_dict_yaml_file(file_in, file_out, dict_char_codes, dict_word_freq, yaml_header, words)
 
 def convert_dict_yaml_file(
         yaml_file_in: str,
         yaml_file_out: str,
         dict_char_codes: dict,
         dict_word_freq: dict,
-        yaml_header: str = ""
-    ) -> None:
+        yaml_header: str = "",
+        words: set = set()
+    ) -> tuple:
     """生成整句版码表文件(从yaml文件提取词条)
     
     Args:
@@ -318,6 +323,7 @@ def convert_dict_yaml_file(
         yaml_header (str): yaml文件描述
     """
     str_result = ""
+    list_word_wcode = []  # 用于收集(末字为全码首选字)2字词条目
     lines = []
     yaml_file_flag = False
     # 开始处理
@@ -327,7 +333,6 @@ def convert_dict_yaml_file(
         line_1st = lines[0].lstrip()
         if line_1st.startswith("#") and "ime" in line_1st:
             yaml_file_flag = True
-    words = set()
     for line in lines:
         line = line.strip()
         # 0.预处理
@@ -364,6 +369,9 @@ def convert_dict_yaml_file(
             freq = dict_word_freq[word]
         freq = 2 if int(freq) <= 0 else max(int(freq),3)  # occur then at least 3
         str_result += f"{word}\t{word_code}\t{freq}\n"
+        # 收集2字词条目(末字为全码首选字)
+        if len(word) == 2 and ("1===" not in word_code.split(" ")[0]) and ("1" in word_code.split(" ")[-1]):
+            list_word_wcode.append({"word": word, "wcode": word_code, "freq": freq, "char": word[-1]})
         words.add(word)  # 记录已处理过的词
     # 输出到文件
     with open(yaml_file_out, 'w', encoding='utf-8') as fw:
@@ -372,3 +380,4 @@ def convert_dict_yaml_file(
         fw.write(yaml_header)
         fw.write(str_result)
     print("处理完毕，结果文件:", yaml_file_out)
+    return list_word_wcode, words

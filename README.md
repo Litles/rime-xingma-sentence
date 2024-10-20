@@ -18,6 +18,7 @@
 
 ![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/shengpizi.png)
 
+![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/guoqing.png)
 
 ## 已开发支持的形码
 

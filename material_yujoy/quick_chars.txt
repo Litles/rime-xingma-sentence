@@ -50,6 +50,7 @@
 快	bo
 许	co
 就	do
+死	fo
 拿	so
 点	uo
 新	wo
