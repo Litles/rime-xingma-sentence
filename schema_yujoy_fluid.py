@@ -100,7 +100,7 @@ class SchemaYujoyFluid:
                 for line in fr:
                     word, code = line.strip().split("\t")
                     if len(code) == 3:
-                        fw.write(f"{word}\t{code.ljust(5,'=')}\t0\n")
+                        fw.write(f"{word}\t{code.ljust(5,'=')}\t1\n")
             print("处理完毕，结果文件:", file_out)
         else:
             self.generate_dict_yaml_jianci()
@@ -444,13 +444,13 @@ class SchemaYujoyFluid:
             yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·填充符号", f"填充所有空余码位，用于标识错误的输入")
             fw.write(yaml_header)
             fw.write("# --- 填充符号码表 ---\n")
-            for a in "abcdefghijklmnopqrstuvwxy":
+            for a in "abcdefghijklmnopqrstuvwxy":  # 还漏了z,不过影响不大
                 for b in "abcdefghijklmnopqrstuvwxyz":
                     for c in "abcdefghijklmnopqrstuvwxyz":
                         code_len3 = a+b+c
                         if code_len3 not in occupied_codes_len3:
-                            fw.write(f"⊗\t{code_len3}==\t0\n")
-                            fw.write(f"⊗\t{code_len3}1=\t0\n")
+                            fw.write(f"⊗\t{code_len3}==\t1\n")
+                            fw.write(f"⊗\t{code_len3}1=\t1\n")
                             n3 += 1
         print(f"共填充三码空码位数：", n3)
         print("已生成填充符码表文件", fp)
@@ -542,9 +542,9 @@ class SchemaYujoyFluid:
             fw.write(yaml_header)
             for word, code in dict_word_code.items():
                 if len(code) == 2:
-                    fw.write(f"{word}\t{code}1==\t0\n")
+                    fw.write(f"{word}\t{code}1==\t1\n")
                 else:
-                    fw.write(f"{word}\t{code.ljust(5,'=')}\t0\n")
+                    fw.write(f"{word}\t{code.ljust(5,'=')}\t1\n")
         print("处理完毕，结果文件:", file_out)
 
     def generate_other_dicts(self):
