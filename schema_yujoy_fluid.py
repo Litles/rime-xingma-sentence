@@ -437,6 +437,12 @@ class SchemaYujoyFluid:
         print("已生成扩展字集的单字码表文件", fp2)
         
         # 3.part 3 (填充剩余的空码位，以单字码表的形式生成)
+        # 加载预设(二三简词), 检查二简词(三简不检查)
+        with open(self.file_quick2, 'r', encoding='utf-8') as fr:
+            for line in fr:
+                code = line.strip().split("\t")[-1]
+                if len(code) == 3 and code[0] == "z":
+                    occupied_codes_len3.add(code)
         dict_name = "chars_none"
         fp = os.path.join(self.dir_out, dict_name+".dict.yaml")
         n3 = 0
@@ -444,7 +450,7 @@ class SchemaYujoyFluid:
             yaml_header = get_dict_yaml_header(dict_name, self.version, f"三码{self.sname}·填充符号", f"填充所有空余码位，用于标识错误的输入")
             fw.write(yaml_header)
             fw.write("# --- 填充符号码表 ---\n")
-            for a in "abcdefghijklmnopqrstuvwxy":  # 还漏了z,不过影响不大
+            for a in "abcdefghijklmnopqrstuvwxyz":  # 还漏了z,不过影响不大
                 for b in "abcdefghijklmnopqrstuvwxyz":
                     for c in "abcdefghijklmnopqrstuvwxyz":
                         code_len3 = a+b+c
