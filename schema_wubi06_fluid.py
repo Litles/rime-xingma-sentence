@@ -14,21 +14,21 @@ class SchemaWubi06Fluid(SchemaYujoyFluid):
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaWubi06Fluid(
-        "material_wubi06",
-        "wubi06_char_full.txt",
-        "schema_wubi06_fluid/dicts_wubi06_fluid",
-        "新世纪五笔",
-        "2.2"
-    )
-    myschema.build()
     # myschema = SchemaWubi06Fluid(
     #     "material_wubi06",
     #     "wubi06_char_full.txt",
-    #     "schema_wubi06_fluid/dicts_wubi06_fluid_a",
+    #     "schema_wubi06_fluid/dicts_wubi06_fluid",
     #     "新世纪五笔",
-    #     "2.2"
+    #     "2.3"
     # )
-    # myschema.build("A")  # A版
+    # myschema.build()
+    myschema = SchemaWubi06Fluid(
+        "material_wubi06",
+        "wubi06_char_full.txt",
+        "schema_wubi06_fluid/dicts_wubi06_fluid_a",
+        "新世纪五笔",
+        "2.3"
+    )
+    myschema.build("A")  # A版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)

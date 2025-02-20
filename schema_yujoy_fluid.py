@@ -3,7 +3,7 @@
 # @Date    : 2024-09-07 00:42:52
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 1.0
+# @Version : 2.3
 
 import os
 import re
@@ -44,8 +44,14 @@ class SchemaYujoyFluid:
         if not os.path.exists(self.dir_out):
             os.makedirs(self.dir_out)
 
-    def build(self, za_flag: str="") -> None:
+    def build(self, za_flag: str="", yujoy_flag: bool=False) -> None:
+        # 0.准备字频表
         adjust_zhi_char_freq(self.dict_char_freq) # 微调原字频
+        if za_flag == "" and yujoy_flag:
+            # (仅适用于空格版卿云)由于首选有设简，调整次选为首选
+            self.dict_char_freq["哥"], self.dict_char_freq["歌"] = self.dict_char_freq["歌"], self.dict_char_freq["哥"]
+            self.dict_char_freq["吗"], self.dict_char_freq["嗯"] = self.dict_char_freq["嗯"], self.dict_char_freq["吗"]
+
         # 1.匹配基本字集所有汉字的编码
         self.list_char_code = combine_code_and_freq(self.dict_char_codes, self.dict_char_freq, self.set_base)
         n_chars = len(self.set_base)
@@ -60,10 +66,26 @@ class SchemaYujoyFluid:
             for d in self.list_char_code:
                 if len(d["code"]) == 2:
                     d["code"] += d["code"][1]
+        elif za_flag == "" and yujoy_flag:
+            # (仅适用于空格版卿云) 为腾出空间设简，先用占位符将原二码字往后挤：钅(vj),風(sf),彡(ws),弋(ki),匸(tf),瓦(nw),廴(gi),丌(oj),卩(ej)
+            self.list_char_code.append({"char": "∎", "code": "vj", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "sf", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "ws", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "ki", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "tf", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "nw", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "gi", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "oj", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "ej", "freq": 99999})
 
-        # 2.额外设“一二三简”, 全码多重设“标记”(即[2-9]重)，三连击设兼容码
+        # 2.部分单字额外设“一二三简”, 全码多重设“标记”(即[2-9]重)，三连击设兼容码
         # 以下两个操作都会修改 self.list_char_code
-        self.set_quick_code(za_flag)   # 额外设“一二三简”(若是z/a版则不设一二简)
+        self.set_quick_code(za_flag, yujoy_flag)   # 额外设“一二三简”(若是z/a版则不设一二简)
+        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
+        freq_var = 300_000
+        for dct in self.list_char_code:
+            dct["freq"] = freq_var
+            freq_var -= 1
         self.set_choice_mark()  # 全码多重设“标记”(即[2-9]重)
 
         # 3.获取扩展字集, 生成单字码表(单字yaml码表文件)
@@ -84,6 +106,17 @@ class SchemaYujoyFluid:
                 })
         list_char_code_ext.sort(key=lambda d: d["char"])
         print("\n---> 开始生成yaml词库文件...")
+        if za_flag == "" and yujoy_flag:
+            # (仅适用于空格版卿云) 保留原被挤的二码字首选全码
+            self.list_char_code.append({"char": "钅", "code": "vj1==", "freq": 1})
+            self.list_char_code.append({"char": "風", "code": "sf1==", "freq": 1})
+            self.list_char_code.append({"char": "彡", "code": "ws1==", "freq": 1})
+            self.list_char_code.append({"char": "弋", "code": "ki1==", "freq": 1})
+            self.list_char_code.append({"char": "匸", "code": "tf1==", "freq": 1})
+            self.list_char_code.append({"char": "瓦", "code": "nw1==", "freq": 1})
+            self.list_char_code.append({"char": "廴", "code": "gi1==", "freq": 1})
+            self.list_char_code.append({"char": "丌", "code": "oj1==", "freq": 1})
+            self.list_char_code.append({"char": "卩", "code": "ej1==", "freq": 1})
         self.generate_dict_yaml_dz(list_char_code_ext)
 
         # 4.生成简词(二三简)词库
@@ -99,12 +132,14 @@ class SchemaYujoyFluid:
                 # 加载预设(三简词), 三简不检查
                 for line in fr:
                     word, code = line.strip().split("\t")
-                    if len(code) == 3:
+                    if len(code) == 3 and code.startswith("z"):
                         fw.write(f"{word}\t{code.ljust(5,'=')}\t1\n")
+                    elif len(code) == 3:
+                        fw.write(f"{word}\t{code.ljust(5,'=')}\t999999\n")
             print("处理完毕，结果文件:", file_out)
         else:
             self.generate_dict_yaml_jianci()
-        # 5.生成特殊词库
+        # 5.生成特殊(英文数字)词库
         dict_name = "words_special"
         file_out = os.path.join(self.dir_out, dict_name+".dict.yaml")
         with (
@@ -119,11 +154,11 @@ class SchemaYujoyFluid:
         print("处理完毕，结果文件:", file_out)
 
         # 6.生成词库(词库yaml码表文件)
-        # (1)准备全部单字编码映射(一字可能有多个码)
+        # (0)准备全部单字编码映射(一字可能有多个码)
         dict_char_codes_new = defaultdict(set)  # 将包含简码在内
         for d in itertools.chain(self.list_char_code, list_char_code_ext):
             dict_char_codes_new[d["char"]].add(d["code"])
-        # (2)开始处理生成词库 yaml 码表文件
+        # (1)生成基础词库
         dir_in = "material_common/cn_dicts"
         dct = {
             "base.dict.yaml": "words",
@@ -150,7 +185,7 @@ class SchemaYujoyFluid:
                 )
                 list_word_wcode += list_word_wcode_temp
                 words_done |= words_done_temp
-        # (3)用户词库
+        # (2)生成用户词库
         file_in = "material_common/words_user.txt"
         dict_meta = {
             "name": "words_user",
@@ -167,10 +202,58 @@ class SchemaYujoyFluid:
             words_done
         )
         list_word_wcode += list_word_wcode_temp
-        # (4)生成选重词库(z/a版不支持)
+        # (3)生成选重词库(z/a版不支持)
         if not za_flag:
             self.generate_dict_yaml_shift(list_word_wcode)
+        else:
+            self.generate_dict_yaml_shift_za()
 
+    def generate_dict_yaml_shift_za(self):
+        """ 只生成单字快捷兼容(四码字,非常规操作,仅为了方便) """
+        yaml_header = get_dict_yaml_header("words_shift", self.version, f"三码{self.sname}·词组选重及取消组词", f"有重的(末字为全码首选字)二字词选重，及取消末字参与组词")
+        file_out = os.path.join(self.dir_out, "words_shift.dict.yaml")
+        with open(file_out, 'w', encoding='utf-8') as fw:
+            fw.write(yaml_header)
+            # (1) 单字部分(用于取消组词，即防止整句前面部分发生变化)
+            # (为非常规)准备
+            set_char_quick_len3 = set()  # 三简字
+            set_code_len3 = set()  # 全码三码字(的编码)
+            # (为常规)准备
+            pat_quick_len3 = re.compile(r"^[a-z]{3}$")
+            pat = re.compile(r"^[a-z]+\d$")
+            for dct in self.list_char_code:
+                code = dct["code"].rstrip("=")
+                if pat.match(code):
+                    # fw.write(f"{dct['char']}\t{code.ljust(6, "+")}\t0\n")
+                    # 全码三码字
+                    if len(code) == 4:
+                        set_code_len3.add(code[:3])
+                # 三简字
+                elif pat_quick_len3.match(code):
+                    set_char_quick_len3.add(dct["char"])
+            # (2) 单字快捷兼容(四码字,非常规操作,仅为了方便)
+            dict_code_chars = defaultdict(list)
+            for dct in self.list_char_code:
+                code = dct["code"].rstrip("=")
+                # (符合条件的)四码全码字
+                if len(code) == 5 and (code[:3] not in set_code_len3):
+                    if dct["char"] in set_char_quick_len3:
+                        # 设了简的依然排第一
+                        dict_code_chars[code[:3]].append({"char":dct["char"], "rank":0})
+                    else:
+                        # 未设简的取原序
+                        dict_code_chars[code[:3]].append({"char":dct["char"], "rank":int(code[-1])})
+            # 排序
+            n_quick = 0
+            for lst in dict_code_chars.values():
+                lst.sort(key=lambda d: d["rank"], reverse=False)  # 从低到高排
+                n_quick += 1
+            # 写入文件
+            for code,lst in dict_code_chars.items():
+                for i in range(min(len(lst),9)): # 最多取9个
+                    fw.write(f"{lst[i]['char']}\t{code}{i+1}+=\t{9-i}\n")
+        print("快捷兼容组数:", n_quick)
+        print("已生成文件", file_out)
 
     def generate_dict_yaml_shift(self, list_word_wcode):
         list_word_wcode.sort(key=lambda d: d["freq"], reverse=True)
@@ -182,43 +265,105 @@ class SchemaYujoyFluid:
             if mt:
                 dict_char_item[mt.group(1)+dct["char"]].append({
                     "word": dct["word"],
-                    "wcode": dct["wcode"]
+                    "wcode": dct["wcode"],
+                    "freq": dct["freq"]
                 })
         # 2.处理，输出到文件
-        yaml_header = get_dict_yaml_header("words_shift", self.version, f"三码{self.sname}·二字词选重", f"有重的(末字为全码首选字)二字词")
+        yaml_header = get_dict_yaml_header("words_shift", self.version, f"三码{self.sname}·词组选重及取消组词", f"有重的(末字为全码首选字)二字词选重，及取消末字参与组词")
         file_out = os.path.join(self.dir_out, "words_shift.dict.yaml")
         n_all = 0
         n_above4 = 0
         with open(file_out, 'w', encoding='utf-8') as fw:
             fw.write(yaml_header)
+            # (1) 词组部分(用于词组选重)
             for lst in dict_char_item.values():
                 if len(lst) > 1:
                     n_all += 1
                     if len(lst) > 4:
                         n_above4 += 1
-                    for i in range(1, len(lst)):
-                        code1, code2 = lst[i]['wcode'].split(" ", 1)
-                        for c in code2.split(","):
-                            if c.endswith("1==="):
-                                wc = c[:1] + str(min(i+1,9)) + "++++"
-                                fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
-                            elif c.endswith("1=="):
-                                wc = c[:2] + str(min(i+1,9)) + "+++"
-                                fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
-                            elif c.endswith("1="):
-                                wc = c[:3] + str(min(i+1,9)) + "++"
-                                fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
-                            elif c.endswith("1"):
-                                wc = c[:4] + str(min(i+1,9)) + "+"
-                                fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
-        print("总组数、5重以上组数:", n_all, n_above4)
+                    for i in range(len(lst)):
+                        if i == 0:
+                            fw.write(f"{lst[i]['word']}\t{lst[i]['wcode']}\t{lst[i]['freq']+1}\n")  # 词频加一确保是首选(Rime有去重机制，重复了没关系)
+                        else:
+                            code1, code2 = lst[i]['wcode'].split(" ", 1)
+                            for c in code2.split(","):
+                                if c.endswith("1==="):
+                                    wc = c[:1] + str(min(i+1,9)) + "++++"
+                                    fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
+                                elif c.endswith("1=="):
+                                    wc = c[:2] + str(min(i+1,9)) + "+++"
+                                    fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
+                                elif c.endswith("1="):
+                                    wc = c[:3] + str(min(i+1,9)) + "++"
+                                    fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
+                                elif c.endswith("1"):
+                                    wc = c[:4] + str(min(i+1,9)) + "+"
+                                    fw.write(f"{lst[i]['word']}\t{code1+' '+wc}\t{str(max(10-i,0))}\n")
+            # (2) 单字部分(用于取消组词，即防止整句前面部分发生变化)
+            # (为非常规)准备
+            set_char_quick_len3 = set()  # 三简字
+            set_code_len3 = set()  # 全码三码字(的编码)
+            # (为常规)准备
+            pat_quick_len3 = re.compile(r"^[a-z]{3}$")
+            pat = re.compile(r"^[a-z]+\d$")
+            for dct in self.list_char_code:
+                code = dct["code"].rstrip("=")
+                if pat.match(code):
+                    fw.write(f"{dct['char']}\t{code.ljust(6, "+")}\t0\n")
+                    # 全码三码字
+                    if len(code) == 4:
+                        set_code_len3.add(code[:3])
+                # 三简字
+                elif pat_quick_len3.match(code):
+                    set_char_quick_len3.add(dct["char"])
+            # (3) 单字快捷兼容(四码字,非常规操作,仅为了方便)
+            dict_code_chars = defaultdict(list)
+            for dct in self.list_char_code:
+                code = dct["code"].rstrip("=")
+                # (符合条件的)四码全码字
+                if len(code) == 5 and (code[:3] not in set_code_len3):
+                    if dct["char"] in set_char_quick_len3:
+                        # 设了简的依然排第一
+                        dict_code_chars[code[:3]].append({"char":dct["char"], "rank":0})
+                    else:
+                        # 未设简的取原序
+                        dict_code_chars[code[:3]].append({"char":dct["char"], "rank":int(code[-1])})
+            # 排序
+            n_quick = 0
+            for lst in dict_code_chars.values():
+                lst.sort(key=lambda d: d["rank"], reverse=False)  # 从低到高排
+                n_quick += 1
+            # 写入文件
+            for code,lst in dict_code_chars.items():
+                for i in range(min(len(lst),9)): # 最多取9个
+                    fw.write(f"{lst[i]['char']}\t{code}{i+1}+=\t{9-i}\n")
+            # (4) 单字快捷兼容(三、四码字,非常规操作,仅为了方便)
+            dict_code_chars2 = defaultdict(list)
+            for dct in self.list_char_code:
+                code = dct["code"].rstrip("=")
+                # (符合条件的)四码全码字
+                if len(code) in (4,5) and code[:3] in set_code_len3:
+                    if dct["char"] in set_char_quick_len3:
+                        # 设了简的依然排第一
+                        dict_code_chars2[code[:3]].append({"char":dct["char"], "freq":999999})
+                    else:
+                        # 未设简的取原序
+                        dict_code_chars2[code[:3]].append({"char":dct["char"], "freq":dct["freq"]})
+            # 排序
+            n_quick2 = 0
+            for lst in dict_code_chars2.values():
+                lst.sort(key=lambda d: d["freq"], reverse=True)  # 从高到低排
+                n_quick2 += 1
+            # 写入文件
+            for code,lst in dict_code_chars2.items():
+                for i in range(min(len(lst),9)): # 最多取9个
+                    fw.write(f"{lst[i]['char']}\t{code}{i+1}+-\t{9-i}\n")
+        print("总组数、5重以上组数、快捷兼容组数、快捷兼容组数2:", n_all, n_above4, n_quick, n_quick2)
         print("已生成文件", file_out)
 
 
-    def set_quick_code(self, za_flag: str=""):
+    def set_quick_code(self, za_flag: str="", yujoy_flag: bool=False):
         list_char_code_new = []
-        # 0.按词频排序(从高到低)
-        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
         print("\n---> 开始设置简码...")
 
         # 1.(可选)设置一二简(一简对应全码字频调为1，二简不变)
@@ -227,17 +372,25 @@ class SchemaYujoyFluid:
         else:
             self.set_quick_code_len1_len2(list_char_code_new)
 
-        # 2.含三连击的字添加兼容码(省一击, 不足三码补v)
-        set_tri_char = set() # 三连击的字
+        # 2.添加兼容码: 含三连击的字(省一击, 不足三码补v), 自定义兼容码
+        set_char_compat = set() # 三连击的字
         list_char_code_temp0 = []  # 原编码
         list_char_code_temp = []  # 兼容编码
         pat = re.compile(r"([a-z])\1\1")
         for d in self.list_char_code:
+            proc_flag, c = False, "xxxx"
             mth = pat.search(d["code"])
+            # (a)三连击
             if mth:
                 c = d["code"].replace(mth.group(0), mth.group(0)[:2])
                 if len(c) == 2:
                     c += "v"
+                proc_flag = True
+            # (b)自定义
+            elif yujoy_flag and d["char"] == "要":
+                c = "wln"
+                proc_flag = True
+            if proc_flag:
                 list_char_code_temp0.append({
                     "char": d["char"],
                     "code": d["code"],
@@ -249,12 +402,12 @@ class SchemaYujoyFluid:
                     "freq": d["freq"]
                 })
                 d["code"] = c
-                set_tri_char.add(d["char"])
+                set_char_compat.add(d["char"])
         self.list_char_code += list_char_code_temp0
-        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
-        print("添加了兼容码的三连击字数:", len(set_tri_char))
+        print("添加了兼容码的字数:", len(set_char_compat))
 
         # 3.设置"三简"(在3-4码字的范围只设一个，相应的全码字频调成该码组里的第2)
+        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)  # 按词频排序(从高到低)
         dict_code_chars = compute_char_chongma(self.list_char_code, True)
         set_qc3 = set()
         dict_code_char_temp = {}
@@ -269,7 +422,7 @@ class SchemaYujoyFluid:
                     "code": d["code"][:3].ljust(5, "="),
                     "freq": d["freq"]
                 })
-                # b.调整原全码词频，如果有重就调到原第2名的后面(比它小1), 但如果原第2名过于生僻就没必要
+                # b.调整原全码词频，如果有重就调到原第2名的后面(比它小0.5), 但如果原第2名过于生僻就没必要
                 freq = d["freq"]
                 try:
                     code_2rd_char = dict_code_chars[d["code"]][1]
@@ -277,7 +430,7 @@ class SchemaYujoyFluid:
                     if freq_2rd_char <= 2 and freq > 2:
                         pass
                     else:
-                        freq = freq_2rd_char - 1
+                        freq = freq_2rd_char - 0.5
                 except IndexError:
                     pass
                 list_char_code_new.append({
@@ -305,7 +458,7 @@ class SchemaYujoyFluid:
                 })
         # (b)其他
         for d in self.list_char_code:
-            if not (d["char"] in self.set_qc_char or d["char"] in set_tri_char):
+            if not (d["char"] in self.set_qc_char or d["char"] in set_char_compat):
                 code = (d["code"]+"1").ljust(5, "=")
                 list_char_code_new.append({
                     "char": d["char"],
@@ -342,7 +495,7 @@ class SchemaYujoyFluid:
                         "code": (d["code"]+"1").ljust(5, "="),
                         "freq": 1
                     })
-                # 二简字频不变，全码后面再加
+                # 二简的全码字频不变，全码后面再加
                 elif len(dict_char_code[d["char"]]) == 2:
                     # 简码
                     list_char_code_new.append({
@@ -369,7 +522,6 @@ class SchemaYujoyFluid:
         print("设置了二简的字数:", len(dict_char_code)-len(self.set_qc_char))
 
     def set_choice_mark(self):
-        self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
         # 1.获取重码数据
         dict_code_chars = compute_char_chongma(self.list_char_code, True)
         # 检查数据是否正常(正常情况下，简码不应该有多重)
@@ -420,9 +572,10 @@ class SchemaYujoyFluid:
             fw.write(yaml_header)
             fw.write("# --- 基础字集码表 ---\n")
             for d in self.list_char_code:
-                fw.write(f"{d['char']}\t{d['code']}\t{d['freq']}\n")
-                if d["code"].endswith("=="): # 三码简码, 混入了二码也没关系
-                    occupied_codes_len3.add(d["code"].rstrip("1="))
+                if d['char'] != "∎":
+                    fw.write(f"{d['char']}\t{d['code']}\t{d['freq']}\n")
+                    if d["code"].endswith("=="): # 三码简码, 混入了二码也没关系
+                        occupied_codes_len3.add(d["code"].rstrip("1="))
         print("已生成基础字集的单字码表文件", fp1)
         
         # 2.part 2 (扩展字集)
@@ -507,11 +660,11 @@ class SchemaYujoyFluid:
         # --- 2.开始设简(一二简词) ---
         dict_word_code = {}
         # 加载预设(一简词)
-        with open(self.file_quick1, 'r', encoding='utf-8') as fr:
-            for line in fr:
-                word, code = line.strip().split("\t")
-                if len(code) == 1 and len(word) >= 2:
-                    dict_word_code[word] = code
+        # with open(self.file_quick1, 'r', encoding='utf-8') as fr:
+        #     for line in fr:
+        #         word, code = line.strip().split("\t")
+        #         if len(code) == 1 and len(word) >= 2:
+        #             dict_word_code[word] = code
         # 加载预设(二三简词), 检查二简词(三简不检查)
         with open(self.file_quick2, 'r', encoding='utf-8') as fr:
             for line in fr:
@@ -548,9 +701,14 @@ class SchemaYujoyFluid:
             fw.write(yaml_header)
             for word, code in dict_word_code.items():
                 if len(code) == 2:
-                    fw.write(f"{word}\t{code}1==\t1\n")
-                else:
+                    if word in ("·","需求","努力","感觉","数据","必须","科学","免费","付费"):  # 由于相应编码有重，调频确保这些词为首选
+                        fw.write(f"{word}\t{code}1==\t999999\n")
+                    else:
+                        fw.write(f"{word}\t{code}1==\t1\n")
+                elif len(code) == 3 and code.startswith("z"):
                     fw.write(f"{word}\t{code.ljust(5,'=')}\t1\n")
+                else:
+                    fw.write(f"{word}\t{code.ljust(5,'=')}\t999999\n")
         print("处理完毕，结果文件:", file_out)
 
     def generate_other_dicts(self):
@@ -559,32 +717,31 @@ class SchemaYujoyFluid:
         dct = {
             "zwords_idioms.txt": ("zwords_idioms", f"三码{self.sname}·成语名句", "数据源自《现代汉语词典》、《现代汉语句典》、《中华句典大全集》"),
             "zwords_poems.txt": ("zwords_poems", f"三码{self.sname}·古诗词","数据源自《宋词鉴赏大典》、《唐诗三百首便览》、《唐诗宋词全鉴 典藏版》、《唐诗鉴赏辞典》"),
-            "zwords_others.txt": ("zwords_others", f"三码{self.sname}·其他杂项","包含人名地名等专有名词，以及从《教育部重編國語辭典》转简而来的词"),
+            "zwords_others.txt": ("zwords_others", f"三码{self.sname}·其他杂项","包含人名地名等专有名词, 《100年汉语新词新语大辞典》, 以及从《教育部重編國語辭典》转简而来的词"),
             "zwords_special.txt": ("zwords_special", f"三码{self.sname}·特殊词","包含英文词等")
         }
         # 1.加载所有zwords
         list_char_code_all = []
-        freq_var = 200_000
+        freq_special = 300_000
         for fname in os.listdir(dir_in):
-            if fname in dct:
-                file_in = os.path.join(dir_in, fname)
-                if "zwords_special" in file_in:
-                    for d in get_encoded_words_en(file_in):
-                        list_char_code_all.append({
-                            "fname": fname,
-                            "word": d["word"],
-                            "code": d["code"],
-                            "freq": freq_var
-                        })
-                        freq_var -= 1
-                else:
-                    for d in get_encoded_words(file_in, self.dict_char_codes):
-                        list_char_code_all.append({
-                            "fname": fname,
-                            "word": d["word"],
-                            "code": d["code"],
-                            "freq": self.dict_word_freq.get(d['word'],2)
-                        })
+            file_in = os.path.join(dir_in, fname)
+            if fname in dct and "zwords_special" in fname:
+                for d in get_encoded_words_en(file_in):
+                    list_char_code_all.append({
+                        "fname": fname,
+                        "word": d["word"],
+                        "code": d["code"],
+                        "freq": freq_special
+                    })
+                    freq_special -= 1
+            elif fname in dct:
+                for d in get_encoded_words(file_in, self.dict_char_codes):
+                    list_char_code_all.append({
+                        "fname": fname,
+                        "word": d["word"],
+                        "code": d["code"],
+                        "freq": self.dict_word_freq.get(d['word'],2)
+                    })
         with open(os.path.join(dir_in,"zwords_special_sup.txt"), 'r', encoding='utf-8') as fr:
             for line in fr:
                 word, code = line.strip().split("\t", 1)
@@ -592,11 +749,15 @@ class SchemaYujoyFluid:
                     "fname": "zwords_special.txt",
                     "word": word,
                     "code": code,
-                    "freq": freq_var
+                    "freq": freq_special
                 })
-                freq_var -= 1
+                freq_special -= 1
         # 2.计算排名
         list_char_code_all.sort(key=lambda d: d["freq"], reverse=True)  # 重码率大概50%, 4重以上3000多组
+        freq_var = 300_000
+        for d in list_char_code_all:  # 重新赋值词频(避免同频，这样能确保与Rime程序的排序一致)
+            d["freq"] = freq_var
+            freq_var -= 1
         dict_word_mark = {}
         dict_code_words = compute_char_chongma(list_char_code_all, True)
         for code, words in dict_code_words.items():
@@ -615,7 +776,7 @@ class SchemaYujoyFluid:
                 fw.write(yaml_header)
                 for d in list_char_code_all:
                     if d["fname"] == fname:
-                        fw.write(f"{d['word']}\tz{d['code']}{dict_word_mark.get(d['code']+d['word'],'=')}\t{d['freq']}\n")  # 添加z前缀
+                        fw.write(f"{d['word']}\tz{d['code']}{dict_word_mark.get(d['code']+d['word'],'=')}=\t{d['freq']}\n")  # 添加z前缀
             print("已生成文件", file_out)
 
 if __name__ == '__main__':
@@ -626,17 +787,17 @@ if __name__ == '__main__':
         "yujoy.full.dict_v3.6.0.yaml",
         "schema_yujoy_fluid/dicts_yujoy_fluid",
         "卿云",
-        "2.2"
+        "2.3"
     )
-    myschema.build()
+    myschema.build("", True)
     # myschema = SchemaYujoyFluid(
     #     "material_yujoy",
     #     "yujoy.full.dict_v3.6.0.yaml",
-    #     "schema_yujoy_fluid/dicts_yujoy_fluid_z",
+    #     "schema_yujoy_fluid/dicts_yujoy_fluid_a",
     #     "卿云",
-    #     "2.2"
+    #     "2.3"
     # )
-    # myschema.build("Z")  # z版
+    # myschema.build("A", True)  # a版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
 

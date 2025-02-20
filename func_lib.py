@@ -110,16 +110,7 @@ def combine_code_and_freq(dict_char_codes: dict, dict_word_freq: dict, charset: 
     return list_char_freq
 
 def adjust_zhi_char_freq(dict_char_freq: dict) -> None:
-    # 1.手动调整部分字频
-    dict_char_freq["世"], dict_char_freq["丨"] = dict_char_freq["丨"], dict_char_freq["世"]
-    dict_char_freq["咸"], dict_char_freq["唔"] = dict_char_freq["唔"], dict_char_freq["咸"]
-    dict_char_freq["运"], dict_char_freq["横"] = dict_char_freq["横"], dict_char_freq["运"]
-    dict_char_freq["髟"], dict_char_freq["灬"] = dict_char_freq["灬"], dict_char_freq["髟"]
-    dict_char_freq["购"], dict_char_freq["丸"] = dict_char_freq["丸"], dict_char_freq["购"]
-    dict_char_freq["急"], dict_char_freq["绿"] = dict_char_freq["绿"], dict_char_freq["急"]
-    # print(dict_char_freq["世"], dict_char_freq["丨"])
-    
-    # 2.调繁体字，确保大部分情况下简体先于繁体
+    # 1.调繁体字，确保大部分情况下简体先于繁体
     set_big5 = get_charset("字符集/Big5_汉字(包含兼容汉字).txt")
     set_tg = get_charset("字符集/G标_通规/通规（8105字）.txt")
     # set_gb2312 = get_charset("字符集/G标/GB2312汉字集.txt")  # GB2312中有少许繁体字(比如『後』)
@@ -146,22 +137,41 @@ def adjust_zhi_char_freq(dict_char_freq: dict) -> None:
             dict_char_freq[char] = max(int(dict_char_freq[char] / divisor), 3)
     print("已调整繁体字字频个数:", len(set_big5_only))
 
-    # 3.调生僻字, 检查是否有本应5000开外(根据另一张字频表)的却在前3000
+    # 2.调生僻字, 检查是否有本应5000开外(根据另一张字频表)的却在前3000内
     list_char_freq = [{"char": char, "freq": freq} for char, freq in dict_char_freq.items()]
     list_char_freq.sort(key=lambda d: d["freq"], reverse=True)
     set_after5000 = get_charset("字词频/25亿字频表_5000之后.txt")
     set_after5000 -= set("怼熵薅咩吖欸粿焗焯蚝馕齁烷垚")
     set_after5000_proc = set()  # 实际需要处理的部分
-    for i in range(3000):
-        char = list_char_freq[i]["char"]
-        if char in set_after5000:
-            set_after5000_proc.add(char)
+    for dct in list_char_freq[:3000]:
+        if dct["char"] in set_after5000:
+            set_after5000_proc.add(dct["char"])
     # 开始处理
     bar = list_char_freq[4999]["freq"]
     for char in set_after5000_proc:
         if dict_char_freq.get(char, 2) >= 3:
             dict_char_freq[char] = bar - 1
     print("已调整生僻字字频个数:", len(set_after5000_proc))
+
+    # 3.调高频字，检查是否有本应在前1500内(根据另一张字频表)的却在3000开外
+    # list_char_freq = [{"char": char, "freq": freq} for char, freq in dict_char_freq.items()]
+    # list_char_freq.sort(key=lambda d: d["freq"], reverse=True)
+    # set_before1500 = get_charset("字词频/极速跟打器_前1500.txt")
+    # set_before1500_proc = set()  # 实际需要处理的部分
+    # for dct in list_char_freq[3000:]:
+    #     if dct["char"] in set_before1500:
+    #         set_before1500_proc.add(dct["char"])
+    # print(set_before1500_proc)
+
+    # 4.手动调整部分字频
+    # dict_char_freq["世"], dict_char_freq["丨"] = dict_char_freq["丨"], dict_char_freq["世"]
+    dict_char_freq["咸"], dict_char_freq["唔"] = dict_char_freq["唔"], dict_char_freq["咸"]
+    dict_char_freq["运"], dict_char_freq["横"] = dict_char_freq["横"], dict_char_freq["运"]
+    dict_char_freq["髟"], dict_char_freq["灬"] = dict_char_freq["灬"], dict_char_freq["髟"]
+    dict_char_freq["购"], dict_char_freq["丸"] = dict_char_freq["丸"], dict_char_freq["购"]
+    dict_char_freq["急"], dict_char_freq["绿"] = dict_char_freq["绿"], dict_char_freq["急"]
+    dict_char_freq["奋"], dict_char_freq["畑"] = dict_char_freq["畑"], dict_char_freq["奋"]
+    dict_char_freq["航"], dict_char_freq["隼"] = dict_char_freq["隼"], dict_char_freq["航"]
 
 def generate_dict_file_with_freq(file_in: str, file_freq: str) -> None:
     """为词库匹配词频，生成带词频的文件
@@ -201,9 +211,13 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
     """
     dct = dict_code_chars
     print("\n--- 重码情况统计 ---")
-    print("总字数:", sum(len(dct[code]) for code in dct))
+    n_total = sum(len(dct[code]) for code in dct)
+    n_wuchong = sum(1 for code in dct if len(dct[code]) == 1)
+    print("总字数:", n_total)
     print("总编码数:", len(dct))
-    print("无重:", sum(1 for code in dct if len(dct[code]) == 1))
+    print("无重编码数:", n_wuchong)
+    print("重码率:", f"{round((n_total-n_wuchong) / n_total * 100, 2)}%")
+    print("选重率:", f"{round((n_total-len(dct)) / n_total * 100, 2)}%")
     print(
         "二重(组数):",
         str(sum(1 for code in dct if len(dct[code]) == 2))+"=",
@@ -222,6 +236,10 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
     )
     print("四重以上(组数):", sum(1 for code in dct if len(dct[code]) > 3))
     print("最大重数:", max(len(dct[code]) for code in dct))
+    # print("--- 2码重码明细 ---")
+    # for code, chars in dct.items():
+    #     if len(code) == 2 and len(chars) > 1:
+    #         print(code, "".join(chars))
     # print("--- 3码重码明细 ---")
     # for code, chars in dct.items():
     #     if len(code) == 3 and len(chars) > 1:
@@ -233,8 +251,8 @@ def print_chongma_statis(dict_code_chars: dict) -> None:
     # print("--- 四重以上明细 ---")
     # for code, chars in dct.items():
     #     if len(chars) > 3:
-    #         print(code, "\n".join(chars))
-    #         # break  # 只展示一个样例
+    #         print(code, " ".join(chars))
+    #         break  # 只展示一个样例
 
 def get_charset(*files: str) -> set[str]:
     str_charset = ""

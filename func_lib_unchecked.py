@@ -213,3 +213,180 @@ def analyse_len2_supplement_choice():
                 if d["freq"] >= bar and d["code"][:3] == code:
                     s += d["char"]
             fw.write(f"{code}\t{chars}\t{s}\n")
+
+
+def cut_to_unique(list_char_code, dict_char_freq):
+    set_codes_len2 = set()
+    set_codes_len3 = set()
+    dict_code_chars = compute_char_chongma(list_char_code)
+    chars_chong = []
+    for code, chars in dict_code_chars.items():
+        if len(code) > 2 and len(chars) > 1:
+            chars_chong += chars[:-1]
+    chars_chong.sort(key=lambda c: dict_char_freq.get(c,2), reverse=True)
+    for char in chars_chong:
+        for dct in list_char_code:
+            if dct["char"] == char and dct["code"][:2] not in set_codes_len2:
+                dct["code"] = dct["code"][:2]
+                set_codes_len2.add(dct["code"][:2])
+                break
+            elif dct["char"] == char and dct["code"][:3] not in set_codes_len3:
+                dct["code"] = dct["code"][:3]
+                set_codes_len3.add(dct["code"][:3])
+                break
+    return set_codes_len2, set_codes_len3
+
+def get_char_code():
+    dir_in = "material_yujoy" # yujoy, yustar
+    fname_full = "yujoy.full.dict_v3.6.0.yaml" # yujoy, yustar
+    set_base = get_charset("字符集/G标/GB2312汉字集.txt", "字符集/G标_通规/通规（8105字）.txt")
+    set_base.add("〇")  # 该字被收录到符号区，但应作为汉字使用，故加之
+    dict_char_codes = load_char_code(os.path.join(dir_in, fname_full))  # 单字全码码表(大概100,000字)
+    dict_char_freq = load_word_freq("字词频/25亿字语料汉字字频表(14975字).txt")
+    list_char_code = combine_code_and_freq(dict_char_codes, dict_char_freq, set_base)
+    set_quick = set("想比让的这来和都为是中了着不那先内及被以个即我在多")  # yujoy
+    # set_quick = set("就对很的有把我都当是了中和能也跟将从而这其不出多那")  # yustar
+    # 1.设一简, 三码字补成四码字(补"v")
+    for dct in list_char_code:
+        if dct["char"] in set_quick:
+            dct["code"] = dct["code"][0]
+        elif len(dct["code"]) == 2:
+            dct["code"] += "vv"
+        elif len(dct["code"]) == 3:
+            dct["code"] += "v"
+    return list_char_code, dict_char_freq
+
+def get_char_code_sky():
+    dir_in = "material_sky"
+    fname_full = "sky_char_chaifen.txt"
+    set_base = get_charset("字符集/G标/GB2312汉字集.txt", "字符集/G标_通规/通规（8105字）.txt")
+    set_base.add("〇")  # 该字被收录到符号区，但应作为汉字使用，故加之
+    # 0.加载拆分表(从中提取单字全码码表)
+    pat = re.compile(r"({[^\}]+})")
+    dict_char_codes = defaultdict(set)
+    set_char_len2 = set()
+    set_char_len3 = set()
+    with open(os.path.join(dir_in, fname_full), 'r', encoding='utf-8') as fr:
+        for line in fr:
+            char, chaifen = line.split("\t")
+            chaifen = chaifen.split(";")[0].lstrip("〔")
+            if "{" in chaifen:
+                chaifen = pat.sub("字", chaifen)
+            for cf in chaifen.split(","):  # 可能有兼容拆分
+                code, chai = cf.split("·")
+                if len(chai) == 1:
+                    dict_char_codes[char].add(code[:2])  # 两码全码
+                    set_char_len2.add(char)
+                # elif len(chai) == 2:
+                #     dict_char_codes[char].add(code[:3])  # 去回头码
+                #     set_char_len3.add(char)
+                else:
+                    dict_char_codes[char].add(code)
+    # 1.生成码表
+    dict_char_freq = load_word_freq("字词频/25亿字语料汉字字频表(14975字).txt")
+    list_char_code = combine_code_and_freq(dict_char_codes, dict_char_freq, set_base)
+    set_quick = set("人的到是现在我一说这来上了用只也为大要不出你经小着那")
+    # 2.设一简, 二三码字补成四码字(补"v")
+    for dct in list_char_code:
+        if dct["char"] in set_quick:
+            dct["code"] = dct["code"][0]
+        elif len(dct["code"]) == 2:
+            dct["code"] += "vv"
+        elif len(dct["code"]) == 3:
+            dct["code"] += "v"
+    return list_char_code, dict_char_freq
+
+def chu_jian_bu_chu_quan():
+    # 1.获取单字码表
+    list_char_code, dict_char_freq = get_char_code()
+    # list_char_code, dict_char_freq = get_char_code_sky()
+    # 2.三四码重码去重
+    list_char_code.sort(key=lambda d: d["freq"], reverse=True)
+    set_codes_len2, set_codes_len3 = cut_to_unique(list_char_code, dict_char_freq)
+    dict_code_chars = compute_char_chongma(list_char_code)
+    for code, chars in dict_code_chars.items():
+        if len(chars) > 1 and len(code) == 4:
+            for dct in list_char_code:
+                if dct["char"] == chars[1]:
+                    dct["code"] = dct["code"][:3] + "o"
+                    break
+    dict_code_chars = compute_char_chongma(list_char_code)
+    for code, chars in dict_code_chars.items():
+        if len(chars) > 1 and len(code) == 4:
+            for dct in list_char_code:
+                if dct["char"] == chars[1]:
+                    dct["code"] = dct["code"][:3] + "u"
+                    break
+    # 3.按字频设简
+    freq_bar = list_char_code[1000]["freq"]
+    left_key = set('qwertasdfgzxcvb')
+    # right_key = set('yuiophjklnm')
+    for dct in list_char_code:
+        if len(dct["code"]) > 2 and dct["freq"] > freq_bar:
+            if dct["code"][:2] not in set_codes_len2:
+                dct["code"] = dct["code"][:2]
+                set_codes_len2.add(dct["code"])
+            elif dct["code"][:3] not in set_codes_len3:
+                dct["code"] = dct["code"][:3]
+                set_codes_len3.add(dct["code"])
+            elif len(dct["code"]) == 4 and dct["freq"] > freq_bar:
+                if dct["code"][0] in left_key:
+                    if dct["code"][0]+"k" not in set_codes_len2:
+                        print("done")
+                        dct["code"] = dct["code"][0] + "o"
+                        set_codes_len2.add(dct["code"])
+                else:
+                    if dct["code"][0]+"a" not in set_codes_len2:
+                        print("done")
+                        dct["code"] = dct["code"][0] + "a"
+                        set_codes_len2.add(dct["code"])
+                if len(dct["code"]) == 4:
+                    print("未设简的前1000字:", dct["char"], dct["code"])
+    dict_code_chars = compute_char_chongma(list_char_code, True)
+    with open('out.txt', 'w', encoding='utf-8') as fw:
+        for code, chars in dict_code_chars.items():
+            # if len(code) == 2:
+            for char in chars:
+                fw.write(f"{char}\t{code}\n")
+
+def ciku_lisan():
+    dict_char_codes = load_char_code("Litles/单字码表_yustar.txt") # 单字码表_yujoy_出简, 单字码表_wubi06
+    # print(len(dict_char_codes), dict_char_codes["字"])
+    # for k,v in dict_char_codes.items():
+    #     if not v:
+    #         print(k,v)
+    dict_ciku = {}
+    with open('Litles/匠士雨词库_7万_len2.txt', 'r', encoding='utf-8') as fr:  # 匠士雨词库_11万 白霜词库_60万
+        for line in fr:
+            word, freq = line.strip().split("\t")
+            dict_ciku[word] = int(freq)
+    # 1.开始编码
+    list_word_code = []
+    # (a)整句方案
+    for word in dict_ciku:
+        code = ""
+        for char in word:
+            if char in dict_char_codes:
+                code += list(dict_char_codes[char])[-1]
+            else:
+                print(char)
+                # code += list(dict_char_codes[char])[-1]
+        list_word_code.append({"word": word, "code": code})
+    # (b)四码定长方案
+    # for word in dict_ciku:
+    #     if encode(word, dict_char_codes):
+    #         code = list(encode(word, dict_char_codes))[0]
+    #         list_word_code.append({"word": word, "code": code})
+    # 2.计算重码
+    dict_code_chars = compute_char_chongma(list_word_code, True)
+    sum_all, sum_1st, sum_wuchong = 0, 0, 0
+    for code, chars in dict_code_chars.items():
+        for i in range(len(chars)):
+            if i == 0:
+                sum_1st += dict_ciku[chars[i]]
+            sum_all += dict_ciku[chars[i]]
+        if len(chars) == 1:
+            for i in range(len(chars)):
+                sum_wuchong += dict_ciku[chars[i]]
+    print("重码率(加权):", f"{round((sum_all-sum_wuchong) / sum_all * 100, 2)}%")
+    print("选重率(加权):", f"{round((sum_all-sum_1st) / sum_all * 100, 2)}%")

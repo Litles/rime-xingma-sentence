@@ -1,3 +1,17 @@
+Lua
+Weasel
+Squirrel
+YAML
+AGI
+Linus
+bug
+Huawei
+call
+GDP
+AIGC
+AKA
+LTS
+aka
 Wi-Fi
 BIOS
 T-Mobile
@@ -6,6 +20,7 @@ Ctrl+
 Hi-Fi
 https://
 http://
+Premium
 Notepad++
 PL/SQL
 PL/SQL Developer
@@ -31,6 +46,7 @@ Administrator
 Adobe
 Airpods
 Alpha
+Alphabet
 Amazon
 Android
 Angelababy
@@ -55,8 +71,8 @@ CapsLock
 CCTV
 CentOS
 ComicEnhancerPro
-CHERRY
 Cherry
+CHERRY
 Chrome
 class
 CMOS
@@ -133,6 +149,7 @@ ITellYou
 iTunes
 JavaScript
 Java
+CSS
 Kailh
 KaTex
 KeePass
@@ -224,6 +241,9 @@ Rime
 RSSHub
 RStudio
 Safari
+Spotify
+MediaTek
+Samsung
 SAMSUNG
 ScrollLock
 Seafile
@@ -266,8 +286,9 @@ WiFi
 Wikipedia
 Wiki
 Wikibooks
-WindowsPhone
+Windows Phone
 Windows
+Trime
 Word
 WordPress
 Workflow
@@ -278,3 +299,133 @@ YouTube
 ChatGPT
 Netflix
 OpenAI
+Pro Max
+Ultra
+Plus
+iOS
+Pro
+Mac
+Apple Intelligence
+Win
+Code page
+TikTok
+Tesla
+Litles
+SpaceX
+Meta
+Broadcom
+Tencent
+TSMC
+ASML
+SAP
+AMD
+Alibaba
+IBM
+QUALCOMM
+Uber
+Sony
+Dell
+PlayStation
+Airbnb
+Baidu
+Cloudflare
+MongoDB
+ByteDance
+ASUS
+Reddit
+GitLab
+Bilibili
+Dropbox
+Gucci
+Hermes
+Chanel
+Prada
+Rolls-Royce
+Ferrari
+Lamborghini
+Bentley
+Bugatti
+Rolex
+ShareX
+Cpp
+GBK
+GUI
+CPython
+IPython
+Cython
+SQLite
+HarmonyOS
+HarmonyOS NEXT
+Harmony
+China
+USA
+America
+demo
+ArkTS
+App Store
+APP
+App
+KPI
+GPA
+CJK
+CJKV
+Java SE
+Java EE
+JDK
+Gemini
+FreeMdict
+RDBMS
+API
+CJK-A
+CJK-B
+CJK-C
+CJK-D
+CJK-E
+CJK-F
+CJK-G
+CJK-H
+CJK-I
+CJK-J
+PUA
+ROI
+XML
+HTML
+ACGN
+Bill Inmon
+William H. Inmon
+Ralph Kimball
+IDE
+Sqoop
+Flume
+Parquet
+Pig
+Crunch
+HBase
+ZooKeeper
+Apache
+Apache Hadoop
+Tez
+Impala
+Storm
+Spark Streaming
+Samza
+Solr
+Reduce
+Map
+Mate
+SQL
+Kafka
+Kimball
+Anki
+CRM
+ERP
+IoT
+Lite
+Light
+Medium
+Regular
+Screen
+FineBI
+ClickHouse
+ETL
+DeepSeek

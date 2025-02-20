@@ -1,4 +1,6 @@
+a.k.a.	akav
 tan90°	tand
+tan90°	tanj
 tan90°	tann
 tan90°	tana
 AK47	aksq
@@ -6,6 +8,8 @@ AK47	akfo
 AK47	akfs
 Big5	bigw
 Big5	bigf
+Big-5	bigw
+Big-5	bigf
 GB2312	gbee
 GB18030	gbyl
 GB18030-2000	gbyl
@@ -22,6 +26,8 @@ GF3002-1999	gfsj
 GF3002-1999	gfsy
 html5	htmw
 html5	htmf
+html5	html
+http://127.0.0.1	http
 http://127.0.0.1	httl
 http://127.0.0.1	httt
 http://127.0.0.1	htty
@@ -33,24 +39,21 @@ PM2.5	pmew
 127.0.0.1	oneo
 UTF-8	utfb
 UTF-8	utfe
+UTF-16	utfs
+UTF-16	utfl
 V2Ray	vtwy
 V2Ray	vtra
+V2Ray	vtwo
 v2rayN	vtwn
 v2rayN	vtra
-Win11	winy
-Win11	wins
-Win11	wine
-Win10	wins
-Win10	wint
-Win7	wins
-Win7	winq
-Windows11	winy
-Windows11	wins
-Windows11	wine
-Windows10	wins
-Windows10	wint
-Windows7	wins
-Windows7	winq
+v2rayN	vtwo
+Windows 11	winy
+Windows 11	wins
+Windows 11	wine
+Windows 10	wins
+Windows 10	wint
+Windows 7	wins
+Windows 7	winq
 Alt+Shift+Ctrl+	altc
 Ctrl+Alt+Shift+	ctrs
 Ctrl+Shift+Alt+	ctra
@@ -58,3 +61,46 @@ Ctrl+Shift+	ctrs
 Shift+Alt+Ctrl+	ctrc
 Shift+Ctrl+Alt+	shia
 Shift+Ctrl+	shic
+C++	cppv
+C++	cjjv
+GPT4	gpts
+GPT4	gptf
+GPT3	gpts
+GPT3	gptt
+RISC-V	risv
+RISC-V	risf
+RISC-V	risc
+cp936	cpjl
+cp936	codp
+cp65001	codp
+cp65001	coly
+DW/BI	dwbi
+1980s	yjbl
+1980s	yjbs
+1990s	yjjl
+1990s	yjjs
+2000s	elll
+2000s	ells
+2010s	elyl
+2010s	elys
+2020s	elel
+2020s	eles
+2030s	elsl
+2030s	elss
+e.g.	fore
+etc.	etcv
+etc.	etce
+R&D	radv
+R&D	resd
+P&L	palv
+P&L	prol
+V2Ray	vtry
+v2rayN	vtrn
+DeepSeek-V3	dees
+DeepSeek-V3	deev
+DeepSeek-R1	dees
+DeepSeek-R1	deer
+ChatGPT-o1	chag
+ChatGPT-o1	chao
+ChatGPT-o3	chag
+ChatGPT-o3	chao

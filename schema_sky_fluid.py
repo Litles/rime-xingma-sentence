@@ -65,22 +65,22 @@ class SchemaSkyFluid(SchemaYujoyFluid):
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaSkyFluid(
-        "material_sky",
-        "sky_char_chaifen.txt",
-        "schema_sky_fluid/dicts_sky_fluid",
-        "天码",
-        "2.2"
-    )
-    myschema.build()
     # myschema = SchemaSkyFluid(
     #     "material_sky",
     #     "sky_char_chaifen.txt",
-    #     "schema_sky_fluid/dicts_sky_fluid_a",
+    #     "schema_sky_fluid/dicts_sky_fluid",
     #     "天码",
-    #     "2.2"
+    #     "2.3"
     # )
-    # myschema.build("A")  # A版
+    # myschema.build()
+    myschema = SchemaSkyFluid(
+        "material_sky",
+        "sky_char_chaifen.txt",
+        "schema_sky_fluid/dicts_sky_fluid_a",
+        "天码",
+        "2.3"
+    )
+    myschema.build("A")  # A版
     print("\nRuntime:", time.perf_counter() - start)
 """
 对官方天码的调整

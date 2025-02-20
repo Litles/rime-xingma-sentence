@@ -75,21 +75,21 @@ class SchemaYustarFluid(SchemaYujoyFluid):
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaYustarFluid(
-        "material_yustar",
-        "yustar.full.dict_v3.6.0.yaml",
-        "schema_yustar_fluid/dicts_yustar_fluid",
-        "星陈",
-        "2.2"
-    )
-    myschema.build()
     # myschema = SchemaYustarFluid(
     #     "material_yustar",
     #     "yustar.full.dict_v3.6.0.yaml",
-    #     "schema_yustar_fluid/dicts_yustar_fluid_z",
+    #     "schema_yustar_fluid/dicts_yustar_fluid",
     #     "星陈",
-    #     "2.2"
+    #     "2.3"
     # )
-    # myschema.build("Z")  # z版
+    # myschema.build()
+    myschema = SchemaYustarFluid(
+        "material_yustar",
+        "yustar.full.dict_v3.6.0.yaml",
+        "schema_yustar_fluid/dicts_yustar_fluid_a",
+        "星陈",
+        "2.3"
+    )
+    myschema.build("A")  # a版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)

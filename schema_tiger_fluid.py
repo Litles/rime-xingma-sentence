@@ -14,20 +14,20 @@ class SchemaTigerFluid(SchemaYujoyFluid):
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaTigerFluid(
-        "material_tiger",
-        "tiger.dict.yaml",
-        "schema_tiger_fluid/dicts_tiger_fluid",
-        "虎码",
-        "2.2"
-    )
-    myschema.build()
     # myschema = SchemaTigerFluid(
     #     "material_tiger",
     #     "tiger.dict.yaml",
-    #     "schema_tiger_fluid/dicts_tiger_fluid_a",
+    #     "schema_tiger_fluid/dicts_tiger_fluid",
     #     "虎码",
-    #     "2.2"
+    #     "2.3"
     # )
-    # myschema.build("A")  # a版
+    # myschema.build()
+    myschema = SchemaTigerFluid(
+        "material_tiger",
+        "tiger.dict.yaml",
+        "schema_tiger_fluid/dicts_tiger_fluid_a",
+        "虎码",
+        "2.3"
+    )
+    myschema.build("A")  # a版
     print("\nRuntime:", time.perf_counter() - start)
