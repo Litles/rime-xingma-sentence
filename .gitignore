@@ -10,6 +10,7 @@ backup/
 english/
 Litles/
 # 自定义剔除文件列表
+_*.*
 *.sublime-workspace
 *.sublime-project
 test.py
