@@ -96,10 +96,11 @@ P&L	palv
 P&L	prol
 V2Ray	vtry
 v2rayN	vtrn
-DeepSeek-V3	dees
-DeepSeek-V3	deev
+DeepSeek	dees
 DeepSeek-R1	dees
 DeepSeek-R1	deer
+DeepSeek-V3	dees
+DeepSeek-V3	deev
 ChatGPT-o1	chag
 ChatGPT-o1	chao
 ChatGPT-o3	chag
