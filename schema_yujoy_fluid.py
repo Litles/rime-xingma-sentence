@@ -701,7 +701,7 @@ class SchemaYujoyFluid:
             fw.write(yaml_header)
             for word, code in dict_word_code.items():
                 if len(code) == 2:
-                    if word in ("·","需求","努力","感觉","数据","必须","科学","免费","付费"):  # 由于相应编码有重，调频确保这些词为首选
+                    if word in ("·","需求","努力","感觉","数据","必须","科学","免费","付费", "默认"):  # 由于相应编码有重，调频确保这些词为首选
                         fw.write(f"{word}\t{code}1==\t999999\n")
                     else:
                         fw.write(f"{word}\t{code}1==\t1\n")

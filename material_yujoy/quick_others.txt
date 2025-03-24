@@ -1,6 +1,7 @@
 需要	sn
 什么	en
 包括	iv
+设置	cv
 时候	je
 重要	jl
 努力	ws
@@ -24,6 +25,7 @@
 是不是	jnj
 有没有	xnx
 没有人	nxu
+几个人	suu
 一个人	fuu
 有一个	xfu
 每一个	gfu
