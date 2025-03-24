@@ -718,60 +718,83 @@ class SchemaYujoyFluid:
             "zwords_idioms.txt": ("zwords_idioms", f"三码{self.sname}·成语名句", "数据源自《现代汉语词典》、《现代汉语句典》、《中华句典大全集》"),
             "zwords_poems.txt": ("zwords_poems", f"三码{self.sname}·古诗词","数据源自《宋词鉴赏大典》、《唐诗三百首便览》、《唐诗宋词全鉴 典藏版》、《唐诗鉴赏辞典》"),
             "zwords_others.txt": ("zwords_others", f"三码{self.sname}·其他杂项","包含人名地名等专有名词, 《100年汉语新词新语大辞典》, 以及从《教育部重編國語辭典》转简而来的词"),
-            "_zwords_special.txt": ("zwords_special", f"三码{self.sname}·特殊词","包含英文词等")
+            "zwords_special.txt": ("zwords_special", f"三码{self.sname}·特殊词","包含英文词等"),
+            "zwords_special_sup.txt": ("zwords_special_sup", f"三码{self.sname}·特殊词(补充)","包含英文词等(手动编码)")
         }
+        # dct_easy_en
+        dct_easy_en = {
+            "base.txt": ("base", "Easy English - base", "english words (base): from https://github.com/skywind3000/ECDICT and OALD"),
+            "special.txt": ("special", "Easy English - special","english words (special)"),
+            "len4.txt": ("len4", "Easy English - len4","english words (quickcode, len4)"),
+            "len5.txt": ("len5", "Easy English - len5","english words (quickcode, len5)")
+        }
+        list_easy_en = []
+        file_in = os.path.join(dir_in, "easy_en/base.txt")
+        counter = defaultdict(int)
+        with open(file_in, 'r', encoding='utf-8') as fr:
+            freq_base = 200_000
+            code_len4 = ""
+            code_len5 = ""
+            punc_pat = re.compile(r"[\-+:;/0123456789'\. ]")
+            for line in fr:
+                word = line.strip()
+                code = punc_pat.sub("", word.lower())
+                list_easy_en.append({"fname": "base.txt", "word": word, "code": code, "freq": freq_base})
+                if len(code) > 4 and counter[code[:4]] < 5:
+                    code_len4 = code[:4]
+                    list_easy_en.append({"fname": "len4.txt", "word": word, "code": code_len4, "freq": 20-counter[code_len4]})
+                    counter[code_len4] += 1
+                if len(code) > 5 and counter[code[:5]] < 5:
+                    code_len5 = code[:5]
+                    list_easy_en.append({"fname": "len5.txt", "word": word, "code": code_len5, "freq": 10-counter[code_len5]})
+                    counter[code_len5] += 1
+                freq_base -= 1
         # 1.加载所有zwords
-        dict_len2 = {} # 收集用于生成 lua 的 customPhrase
-        dictl_len4 = defaultdict(list) # 收集用于生成 lua 的 customPhrase
-        list_char_code_all = []
+        list_word_code_all = []
         freq_special = 300_000
         for fname in os.listdir(dir_in):
             file_in = os.path.join(dir_in, fname)
-            if fname in dct and "_zwords_special" in fname:
+            if fname in dct and "zwords_special." in fname:
+                # 自动生成编码
                 for d in get_encoded_words_en(file_in):
-                    list_char_code_all.append({
+                    list_word_code_all.append({
                         "fname": fname,
-                        "word": d["word"],
+                        "word": f" {d["word"]} ",
                         "code": d["code"],
                         "freq": freq_special
                     })
-                    dictl_len4[d["code"]].append(d["word"])
-                    if d["code"][:2] not in dict_len2:
-                        dict_len2[d["code"][:2]] = d["word"]
+                    list_easy_en.append({"fname": "special.txt", "word": d["word"], "code": d["code"], "freq": freq_special})
                     freq_special -= 1
+            elif fname in dct and "zwords_special_sup." in fname:
+                # 直接从文件读取编码
+                with open(file_in, 'r', encoding='utf-8') as fr:
+                    for line in fr:
+                        word, code = line.strip().split("\t", 1)
+                        list_word_code_all.append({
+                            "fname": fname,
+                            "word": f" {word} ",
+                            "code": code,
+                            "freq": freq_special
+                        })
+                        list_easy_en.append({"fname": "special.txt", "word": word, "code": code, "freq": freq_special})
+                        freq_special -= 1
             elif fname in dct:
+                # 自动生成编码
                 for d in get_encoded_words(file_in, self.dict_char_codes):
-                    list_char_code_all.append({
+                    list_word_code_all.append({
                         "fname": fname,
                         "word": d["word"],
                         "code": d["code"],
                         "freq": self.dict_word_freq.get(d['word'],2)
                     })
-        with open(os.path.join(dir_in,"_zwords_special_sup.txt"), 'r', encoding='utf-8') as fr:
-            for line in fr:
-                word, code = line.strip().split("\t", 1)
-                list_char_code_all.append({
-                    "fname": "_zwords_special.txt",
-                    "word": word,
-                    "code": code,
-                    "freq": freq_special
-                })
-                freq_special -= 1
-        # for lua customPhrase
-        with open(os.path.join(self.dir_out,"special.txt"), 'w', encoding='utf-8') as fw:
-            for code,words in dictl_len4.items():
-                for word in words:
-                    fw.write(f"{code}\t{word.replace(" ", "&nbsp")}\n")
-            for code,word in dict_len2.items():
-                fw.write(f"{code}\t{word.replace(" ", "&nbsp")}\n")
-        # 2.计算排名
-        list_char_code_all.sort(key=lambda d: d["freq"], reverse=True)  # 重码率大概50%, 4重以上3000多组
+        # 2.计算排名(选重)
+        list_word_code_all.sort(key=lambda d: d["freq"], reverse=True)  # 重码率大概50%, 4重以上3000多组
         freq_var = 300_000
-        for d in list_char_code_all:  # 重新赋值词频(避免同频，这样能确保与Rime程序的排序一致)
+        for d in list_word_code_all:  # 重新赋值词频(避免同频，这样能确保与Rime程序的排序一致)
             d["freq"] = freq_var
             freq_var -= 1
         dict_word_mark = {}
-        dict_code_words = compute_char_chongma(list_char_code_all, True)
+        dict_code_words = compute_char_chongma(list_word_code_all, True)
         for code, words in dict_code_words.items():
             rank = 0
             for word in words:
@@ -780,15 +803,26 @@ class SchemaYujoyFluid:
                 else:
                     dict_word_mark[code+word] = str(min(rank, 9))
                 rank += 1
-        # 3.输出到文件
+        # 3.输出到文件(zwords)
         for fname in dct:
             yaml_header = get_dict_yaml_header(dct[fname][0], self.version, dct[fname][1], dct[fname][2])
             file_out = os.path.join(self.dir_out, dct[fname][0]+".dict.yaml")
             with open(file_out, 'w', encoding='utf-8') as fw:
                 fw.write(yaml_header)
-                for d in list_char_code_all:
+                for d in list_word_code_all:
                     if d["fname"] == fname:
                         fw.write(f"{d['word']}\tz{d['code']}{dict_word_mark.get(d['code']+d['word'],'=')}=\t{d['freq']}\n")  # 添加z前缀
+            print("已生成文件", file_out)
+        # 4.输出到文件(easy_en)
+        for fname in dct_easy_en:
+            yaml_header = get_dict_yaml_header(dct_easy_en[fname][0], self.version, dct_easy_en[fname][1], dct_easy_en[fname][2])
+            dir_out = os.path.join(os.path.split(self.dir_out)[0], "dicts_easy_en")
+            file_out = os.path.join(dir_out, dct_easy_en[fname][0]+".dict.yaml")
+            with open(file_out, 'w', encoding='utf-8') as fw:
+                fw.write(yaml_header)
+                for d in list_easy_en:
+                    if d["fname"] == fname:
+                        fw.write(f"{d['word']}\t{d['code']}\t{d['freq']}\n")
             print("已生成文件", file_out)
 
 if __name__ == '__main__':

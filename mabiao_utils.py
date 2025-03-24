@@ -67,8 +67,8 @@ def get_encoded_words_en(file_in: str) -> list:
     """ 只支持4个字母以上的词组 """
     list_word_code = []
     letters = "zyxwvutsrqponmlkjihgfedcbaABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    charset = set(letters+" -+:/0123456789.")
-    punc_pat = re.compile(r"[\-+:/0123456789\.]")
+    charset = set(letters+" -+:;/0123456789.")
+    punc_pat = re.compile(r"[\-+:;/0123456789\.]")
     with open(file_in, 'r', encoding='utf-8') as fr:
         for line in fr:
             word = line.strip()
