@@ -83,6 +83,8 @@ def get_encoded_words_en(file_in: str) -> list:
                 elif len(word_pure) == 3:
                     list_word_code.append({"word": word, "code": word_pure.lower()+"v"})
                 else: # len >= 4
+                    list_word_code.append({"word": word, "code": word_pure.replace(" ", "")[:4].lower()})
+                    # compatiable code
                     if " " in word_pure:
                         c_end = word_pure.rsplit(" ", 1)[-1][0].lower()
                         list_word_code.append({"word": word, "code": word_pure[:3].lower()+c_end})

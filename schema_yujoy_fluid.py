@@ -718,14 +718,16 @@ class SchemaYujoyFluid:
             "zwords_idioms.txt": ("zwords_idioms", f"三码{self.sname}·成语名句", "数据源自《现代汉语词典》、《现代汉语句典》、《中华句典大全集》"),
             "zwords_poems.txt": ("zwords_poems", f"三码{self.sname}·古诗词","数据源自《宋词鉴赏大典》、《唐诗三百首便览》、《唐诗宋词全鉴 典藏版》、《唐诗鉴赏辞典》"),
             "zwords_others.txt": ("zwords_others", f"三码{self.sname}·其他杂项","包含人名地名等专有名词, 《100年汉语新词新语大辞典》, 以及从《教育部重編國語辭典》转简而来的词"),
-            "zwords_special.txt": ("zwords_special", f"三码{self.sname}·特殊词","包含英文词等")
+            "_zwords_special.txt": ("zwords_special", f"三码{self.sname}·特殊词","包含英文词等")
         }
         # 1.加载所有zwords
+        dict_len2 = {} # 收集用于生成 lua 的 customPhrase
+        dictl_len4 = defaultdict(list) # 收集用于生成 lua 的 customPhrase
         list_char_code_all = []
         freq_special = 300_000
         for fname in os.listdir(dir_in):
             file_in = os.path.join(dir_in, fname)
-            if fname in dct and "zwords_special" in fname:
+            if fname in dct and "_zwords_special" in fname:
                 for d in get_encoded_words_en(file_in):
                     list_char_code_all.append({
                         "fname": fname,
@@ -733,6 +735,9 @@ class SchemaYujoyFluid:
                         "code": d["code"],
                         "freq": freq_special
                     })
+                    dictl_len4[d["code"]].append(d["word"])
+                    if d["code"][:2] not in dict_len2:
+                        dict_len2[d["code"][:2]] = d["word"]
                     freq_special -= 1
             elif fname in dct:
                 for d in get_encoded_words(file_in, self.dict_char_codes):
@@ -742,16 +747,23 @@ class SchemaYujoyFluid:
                         "code": d["code"],
                         "freq": self.dict_word_freq.get(d['word'],2)
                     })
-        with open(os.path.join(dir_in,"zwords_special_sup.txt"), 'r', encoding='utf-8') as fr:
+        with open(os.path.join(dir_in,"_zwords_special_sup.txt"), 'r', encoding='utf-8') as fr:
             for line in fr:
                 word, code = line.strip().split("\t", 1)
                 list_char_code_all.append({
-                    "fname": "zwords_special.txt",
+                    "fname": "_zwords_special.txt",
                     "word": word,
                     "code": code,
                     "freq": freq_special
                 })
                 freq_special -= 1
+        # for lua customPhrase
+        with open(os.path.join(self.dir_out,"special.txt"), 'w', encoding='utf-8') as fw:
+            for code,words in dictl_len4.items():
+                for word in words:
+                    fw.write(f"{code}\t{word.replace(" ", "&nbsp")}\n")
+            for code,word in dict_len2.items():
+                fw.write(f"{code}\t{word.replace(" ", "&nbsp")}\n")
         # 2.计算排名
         list_char_code_all.sort(key=lambda d: d["freq"], reverse=True)  # 重码率大概50%, 4重以上3000多组
         freq_var = 300_000
@@ -789,7 +801,7 @@ if __name__ == '__main__':
         "卿云",
         "2.3"
     )
-    myschema.build("", True)
+    # myschema.build("", True)
     # myschema = SchemaYujoyFluid(
     #     "material_yujoy",
     #     "yujoy.full.dict_v3.6.0.yaml",

@@ -15,6 +15,7 @@
 免费	oj
 付费	ej
 登录	dv
+默认	xc
 大学生	mip
 计算机	cga
 互联网	flq
@@ -22,7 +23,10 @@
 办公室	smi
 是不是	jnj
 有没有	xnx
+没有人	nxu
 一个人	fuu
+有一个	xfu
+每一个	gfu
 越来越	hfh
 自定义	cii
 委员会	gku
