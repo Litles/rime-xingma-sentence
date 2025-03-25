@@ -3,7 +3,7 @@
 # @Date    : 2024-10-06 00:17:06
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 1.0
+# @Version : 2.4
 
 from schema_yujoy_fluid import SchemaYujoyFluid
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     #     "tiger.dict.yaml",
     #     "schema_tiger_fluid/dicts_tiger_fluid",
     #     "虎码",
-    #     "2.3"
+    #     "2.4"
     # )
     # myschema.build()
     myschema = SchemaTigerFluid(
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         "tiger.dict.yaml",
         "schema_tiger_fluid/dicts_tiger_fluid_a",
         "虎码",
-        "2.3"
+        "2.4"
     )
     myschema.build("A")  # a版
     print("\nRuntime:", time.perf_counter() - start)

@@ -3,7 +3,7 @@
 # @Date    : 2024-10-06 00:17:06
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 1.0
+# @Version : 2.4
 
 import os
 import re
@@ -70,7 +70,7 @@ if __name__ == '__main__':
     #     "sky_char_chaifen.txt",
     #     "schema_sky_fluid/dicts_sky_fluid",
     #     "天码",
-    #     "2.3"
+    #     "2.4"
     # )
     # myschema.build()
     myschema = SchemaSkyFluid(
@@ -78,7 +78,7 @@ if __name__ == '__main__':
         "sky_char_chaifen.txt",
         "schema_sky_fluid/dicts_sky_fluid_a",
         "天码",
-        "2.3"
+        "2.4"
     )
     myschema.build("A")  # A版
     print("\nRuntime:", time.perf_counter() - start)

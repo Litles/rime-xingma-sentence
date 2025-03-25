@@ -3,7 +3,7 @@
 # @Date    : 2024-09-07 00:42:52
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 1.0
+# @Version : 2.4
 
 import os
 import re
@@ -80,7 +80,7 @@ if __name__ == '__main__':
     #     "yustar.full.dict_v3.6.0.yaml",
     #     "schema_yustar_fluid/dicts_yustar_fluid",
     #     "星陈",
-    #     "2.3"
+    #     "2.4"
     # )
     # myschema.build()
     myschema = SchemaYustarFluid(
@@ -88,7 +88,7 @@ if __name__ == '__main__':
         "yustar.full.dict_v3.6.0.yaml",
         "schema_yustar_fluid/dicts_yustar_fluid_a",
         "星陈",
-        "2.3"
+        "2.4"
     )
     myschema.build("A")  # a版
     myschema.generate_other_dicts()

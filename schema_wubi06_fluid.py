@@ -3,7 +3,7 @@
 # @Date    : 2024-10-06 00:17:06
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 1.0
+# @Version : 2.4
 
 from schema_yujoy_fluid import SchemaYujoyFluid
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     #     "wubi06_char_full.txt",
     #     "schema_wubi06_fluid/dicts_wubi06_fluid",
     #     "新世纪五笔",
-    #     "2.3"
+    #     "2.4"
     # )
     # myschema.build()
     myschema = SchemaWubi06Fluid(
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         "wubi06_char_full.txt",
         "schema_wubi06_fluid/dicts_wubi06_fluid_a",
         "新世纪五笔",
-        "2.3"
+        "2.4"
     )
     myschema.build("A")  # A版
     myschema.generate_other_dicts()

@@ -3,7 +3,7 @@
 # @Date    : 2024-09-07 00:42:52
 # @Author  : Litles (litlesme@gmail.com)
 # @Link    : https://github.com/Litles
-# @Version : 2.3
+# @Version : 2.4
 
 import os
 import re
@@ -26,6 +26,7 @@ class SchemaYujoyFluid:
         # 输入
         print("初始化中...")
         self.dir_in = dir_in
+        self.source_file = fname_full
         self.dict_char_codes = load_char_code(os.path.join(self.dir_in, fname_full))  # 单字全码码表(大概100,000字)
         self.file_quick1 = os.path.join(self.dir_in,"quick_chars.txt")  # 指定一二简(字符)
         self.file_quick2 = os.path.join(self.dir_in,"quick_others.txt")  # 指定二三简(其它)
@@ -828,22 +829,22 @@ class SchemaYujoyFluid:
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaYujoyFluid(
-        "material_yujoy",
-        "yujoy.full.dict_v3.6.0.yaml",
-        "schema_yujoy_fluid/dicts_yujoy_fluid",
-        "卿云",
-        "2.3"
-    )
-    # myschema.build("", True)
     # myschema = SchemaYujoyFluid(
     #     "material_yujoy",
     #     "yujoy.full.dict_v3.6.0.yaml",
-    #     "schema_yujoy_fluid/dicts_yujoy_fluid_a",
+    #     "schema_yujoy_fluid/dicts_yujoy_fluid",
     #     "卿云",
-    #     "2.3"
+    #     "2.4"
     # )
-    # myschema.build("A", True)  # a版
+    # myschema.build("", True)
+    myschema = SchemaYujoyFluid(
+        "material_yujoy",
+        "yujoy.full.dict_v3.6.0.yaml",
+        "schema_yujoy_fluid/dicts_yujoy_fluid_a",
+        "卿云",
+        "2.4"
+    )
+    myschema.build("A", True)  # a版
     myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
 

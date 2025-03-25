@@ -1,0 +1,27 @@
+{
+  "name": "yulight_char_chaifen",
+  "segmentation": {
+    "type": "mmseg",
+    "dict": {
+      "type": "text",
+      "file": "yulight_char_chaifen.txt"
+    }
+  },
+  "conversion_chain": [
+    {
+      "dict": {
+        "type": "group",
+        "dicts": [
+          {
+            "type": "text",
+            "file": "yulight_char_chaifen.txt"
+          },
+          {
+            "type": "text",
+            "file": "yulight_char_chaifen.txt"
+          }
+        ]
+      }
+    }
+  ]
+}
