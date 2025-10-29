@@ -399,3 +399,47 @@ def convert_dict_yaml_file(
         fw.write(str_result)
     print("处理完毕，结果文件:", yaml_file_out)
     return list_word_wcode, words
+
+def full_code_schema(fname_full, dir_out):
+    dict_char_codes = load_char_code(fname_full)  # 单字全码码表(大概100,000字)
+    dict_char_freq = load_word_freq("字词频/知频_字频.txt")  # 字频(词频对于曰常聊天优于"25亿")
+    adjust_zhi_char_freq(dict_char_freq) # 微调原字频
+    set_base = get_charset("字符集/G标/GB2312汉字集.txt", "字符集/G标_通规/通规（8105字）.txt")
+    set_base.add("〇")  # 该字被收录到符号区，但应作为汉字使用，故加之
+    list_char_code = combine_code_and_freq(dict_char_codes, dict_char_freq, set_base)
+    # 1.生成单字码表
+    dict_name = "chars"
+    fp1 = os.path.join(dir_out, dict_name+".dict.yaml")
+    with open(fp1, 'w', encoding='utf-8') as fw:
+        yaml_header = get_dict_yaml_header(dict_name, "1.0", f"全码卿云·基础字集", f"包含 {len(set_base)} 汉字(包含『〇』，但不包含21个兼容字)")
+        fw.write(yaml_header)
+        fw.write("# --- 基础字集码表 ---\n")
+        for d in list_char_code:
+            fw.write(f"{d['char']}\t{d['code']}\t{d['freq']}\n")
+    print("已生成基础字集的单字码表文件", fp1)
+    # 2.生成基础词库
+    dict_word_freq = load_word_freq("字词频/知频_字词频.txt")  # 知频_字词频.txt (里面的字符都在GBK汉字+[a-z|A-Z|\d]范围内, 但只包含7471个通规字)
+    dir_in = "material_common/cn_dicts"
+    dct = {
+        "base.dict.yaml": "words",
+        "ext.dict.yaml": "words_ext",
+        "others.dict.yaml": "words_ext2"
+    }
+    words_done = set()
+    for fname in os.listdir(dir_in):
+        if fname in dct:
+            dict_meta = {
+                "name": dct[fname],
+                "version": "1.0",
+                "name_zh": "全码卿云·词库",
+                "desc": "生成自白霜(frost)词库 " + fname
+            }
+            list_word_wcode_temp, words_done_temp = generate_dict_yaml_ciku(
+                os.path.join(dir_in, fname),
+                dict_char_codes,
+                dict_word_freq,
+                dict_meta,
+                dir_out,
+                words_done
+            )
+            words_done |= words_done_temp

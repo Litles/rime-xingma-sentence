@@ -33,7 +33,7 @@
 表	ha
 学	ia
 出	ja
-呢	ka
+吗	ka
 前	la
 分	ma
 还	na
@@ -60,7 +60,7 @@
 网	qo
 存	xo
 家	id
-吗	kd
+呢	kd
 关	ld
 没	nd
 点	ud

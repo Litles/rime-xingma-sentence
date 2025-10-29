@@ -76,12 +76,12 @@ def get_encoded_words_en(file_in: str) -> list:
                 word_pure = punc_pat.sub("", word)
                 if not word_pure:
                     continue
-                if (not set(word_pure).issubset(charset)) or len(word_pure.replace(" ", "")) < 3:
-                    print("该词中包含未能识别的字符或不足3个字母，已跳过：", word)
+                if (not set(word_pure).issubset(charset)) or len(word_pure.replace(" ", "")) < 2:
+                    print("该词中包含未能识别的字符或不足2个字母，已跳过：", word)
                     with open('encode_error_words.txt', 'a', encoding='utf-8') as fa:
                         fa.write(word + "\n")
-                elif len(word_pure) == 3:
-                    list_word_code.append({"word": word, "code": word_pure.lower()+"v"})
+                elif len(word_pure) in (2, 3):
+                    list_word_code.append({"word": word, "code": word_pure.lower()+"v"*(4-len(word_pure))})
                 else: # len >= 4
                     list_word_code.append({"word": word, "code": word_pure.replace(" ", "")[:4].lower()})
                     # compatiable code

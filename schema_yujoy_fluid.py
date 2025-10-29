@@ -68,7 +68,7 @@ class SchemaYujoyFluid:
                 if len(d["code"]) == 2:
                     d["code"] += d["code"][1]
         elif za_flag == "" and yujoy_flag:
-            # (仅适用于空格版卿云) 为腾出空间设简，先用占位符将原二码字往后挤：钅(vj),風(sf),彡(ws),弋(ki),匸(tf),瓦(nw),廴(gi),丌(oj),卩(ej)
+            # (仅适用于空格版卿云) 为腾出空间设简，先用占位符将原二码字往后挤：钅(vj),風(sf),彡(ws),弋(ki),匸(tf),瓦(nw),廴(gi),丌(oj),卩(ej),甫(af)
             self.list_char_code.append({"char": "∎", "code": "vj", "freq": 99999})
             self.list_char_code.append({"char": "∎", "code": "sf", "freq": 99999})
             self.list_char_code.append({"char": "∎", "code": "ws", "freq": 99999})
@@ -78,12 +78,13 @@ class SchemaYujoyFluid:
             self.list_char_code.append({"char": "∎", "code": "gi", "freq": 99999})
             self.list_char_code.append({"char": "∎", "code": "oj", "freq": 99999})
             self.list_char_code.append({"char": "∎", "code": "ej", "freq": 99999})
+            self.list_char_code.append({"char": "∎", "code": "af", "freq": 99999})
 
         # 2.部分单字额外设“一二三简”, 全码多重设“标记”(即[2-9]重)，三连击设兼容码
         # 以下两个操作都会修改 self.list_char_code
         self.set_quick_code(za_flag, yujoy_flag)   # 额外设“一二三简”(若是z/a版则不设一二简)
         self.list_char_code.sort(key=lambda d: d["freq"], reverse=True)
-        freq_var = 300_000
+        freq_var = 400_000
         for dct in self.list_char_code:
             dct["freq"] = freq_var
             freq_var -= 1
@@ -118,6 +119,7 @@ class SchemaYujoyFluid:
             self.list_char_code.append({"char": "廴", "code": "gi1==", "freq": 1})
             self.list_char_code.append({"char": "丌", "code": "oj1==", "freq": 1})
             self.list_char_code.append({"char": "卩", "code": "ej1==", "freq": 1})
+            self.list_char_code.append({"char": "甫", "code": "af1==", "freq": 1})
         self.generate_dict_yaml_dz(list_char_code_ext)
 
         # 4.生成简词(二三简)词库
@@ -309,7 +311,7 @@ class SchemaYujoyFluid:
             pat = re.compile(r"^[a-z]+\d$")
             for dct in self.list_char_code:
                 code = dct["code"].rstrip("=")
-                if pat.match(code):
+                if pat.match(code) and dct['char'] != "∎":
                     fw.write(f"{dct['char']}\t{code.ljust(6, "+")}\t0\n")
                     # 全码三码字
                     if len(code) == 4:
@@ -390,6 +392,12 @@ class SchemaYujoyFluid:
             # (b)自定义
             elif yujoy_flag and d["char"] == "要":
                 c = "wln"
+                proc_flag = True
+            elif yujoy_flag and d["char"] == "急":
+                c = "onv"
+                proc_flag = True
+            elif yujoy_flag and d["char"] == "绿":
+                c = "onv"
                 proc_flag = True
             if proc_flag:
                 list_char_code_temp0.append({
@@ -702,7 +710,7 @@ class SchemaYujoyFluid:
             fw.write(yaml_header)
             for word, code in dict_word_code.items():
                 if len(code) == 2:
-                    if word in ("·","需求","努力","感觉","数据","必须","科学","免费","付费", "默认"):  # 由于相应编码有重，调频确保这些词为首选
+                    if word in ("·","需求","努力","感觉","数据","必须","科学","免费","付费", "默认", "兼容", "模型"):  # 由于相应编码有重，调频确保这些词为首选
                         fw.write(f"{word}\t{code}1==\t999999\n")
                     else:
                         fw.write(f"{word}\t{code}1==\t1\n")
@@ -727,7 +735,9 @@ class SchemaYujoyFluid:
             "base.txt": ("base", "Easy English - base", "english words (base): from https://github.com/skywind3000/ECDICT and OALD"),
             "special.txt": ("special", "Easy English - special","english words (special)"),
             "len4.txt": ("len4", "Easy English - len4","english words (quickcode, len4)"),
-            "len5.txt": ("len5", "Easy English - len5","english words (quickcode, len5)")
+            "len5.txt": ("len5", "Easy English - len5","english words (quickcode, len5)"),
+            "len7.txt": ("len7", "Easy English - len7","english words (quickcode, len7)"),
+            "len8.txt": ("len8", "Easy English - len8","english words (quickcode, len8)")
         }
         list_easy_en = []
         file_in = os.path.join(dir_in, "easy_en/base.txt")
@@ -736,6 +746,8 @@ class SchemaYujoyFluid:
             freq_base = 200_000
             code_len4 = ""
             code_len5 = ""
+            code_len7 = ""
+            code_len8 = ""
             punc_pat = re.compile(r"[\-+:;/0123456789'\. ]")
             for line in fr:
                 word = line.strip()
@@ -749,6 +761,14 @@ class SchemaYujoyFluid:
                     code_len5 = code[:5]
                     list_easy_en.append({"fname": "len5.txt", "word": word, "code": code_len5, "freq": 10-counter[code_len5]})
                     counter[code_len5] += 1
+                if len(code) > 7 and counter[code[:7]] < 5:
+                    code_len7 = code[:7]
+                    list_easy_en.append({"fname": "len7.txt", "word": word, "code": code_len7, "freq": 10-counter[code_len7]})
+                    counter[code_len7] += 1
+                if len(code) > 8 and counter[code[:8]] < 5:
+                    code_len8 = code[:8]
+                    list_easy_en.append({"fname": "len8.txt", "word": word, "code": code_len8, "freq": 10-counter[code_len8]})
+                    counter[code_len8] += 1
                 freq_base -= 1
         # 1.加载所有zwords
         list_word_code_all = []
@@ -765,6 +785,8 @@ class SchemaYujoyFluid:
                         "freq": freq_special
                     })
                     list_easy_en.append({"fname": "special.txt", "word": d["word"], "code": d["code"], "freq": freq_special})
+                    if len(d["word"]) < 4:
+                        list_easy_en.append({"fname": "special.txt", "word": d["word"], "code": d["code"][:len(d["word"])], "freq": freq_special})
                     freq_special -= 1
             elif fname in dct and "zwords_special_sup." in fname:
                 # 直接从文件读取编码
@@ -778,6 +800,8 @@ class SchemaYujoyFluid:
                             "freq": freq_special
                         })
                         list_easy_en.append({"fname": "special.txt", "word": word, "code": code, "freq": freq_special})
+                        if len(word) < 4:
+                            list_easy_en.append({"fname": "special.txt", "word": word, "code": code[:len(word)], "freq": freq_special})
                         freq_special -= 1
             elif fname in dct:
                 # 自动生成编码
@@ -829,23 +853,23 @@ class SchemaYujoyFluid:
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    # myschema = SchemaYujoyFluid(
-    #     "material_yujoy",
-    #     "yujoy.full.dict_v3.6.0.yaml",
-    #     "schema_yujoy_fluid/dicts_yujoy_fluid",
-    #     "卿云",
-    #     "2.4"
-    # )
-    # myschema.build("", True)
     myschema = SchemaYujoyFluid(
         "material_yujoy",
         "yujoy.full.dict_v3.6.0.yaml",
-        "schema_yujoy_fluid/dicts_yujoy_fluid_a",
+        "schema_yujoy_fluid/dicts_yujoy_fluid",
         "卿云",
         "2.4"
     )
-    myschema.build("A", True)  # a版
-    myschema.generate_other_dicts()
+    myschema.build("", True)
+    # myschema = SchemaYujoyFluid(
+    #     "material_yujoy",
+    #     "yujoy.full.dict_v3.6.0.yaml",
+    #     "schema_yujoy_fluid/dicts_yujoy_fluid_a",
+    #     "卿云",
+    #     "2.4"
+    # )
+    # myschema.build("A", True)  # a版
+    # myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)
 
 """
