@@ -25,11 +25,13 @@
 
 ### 0.畅打十万字
 
-可在规则统一、连贯不中断的情况下流畅地打十万汉字。虽然每个汉字的全码最多是 4 码，但日常打常用字只需要打 2、3 码打常用字，有生僻字需要时再无缝补上第 4 码即可。
+在统一规则、连贯不中断的情况下流畅地打十万汉字。虽然每个汉字的全码最多是 4 码，但日常打常用字只需要打 2、3 码打常用字，有生僻字需要时再无缝补上第 4 码即可。
 
 <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/sheng_pi_zi.gif" width="600" />
 
 ### 1.整句句中单字选重
+
+任何输入法方案，单字存在重码都是正常的，若在整句中出现重码字，比移动光标选重更优雅的解决方案是通过补辅助码（`_`）来选重，并且选多少重都可以。
 
 <p float="left">
   <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/dan_zi_xuan_chong.gif" width="540" />
@@ -38,9 +40,20 @@
 
 ### 2.整句句中词选重
 
+通过词库智能选重是个很好的以词定字、降低码长的办法，但大词库难免会出现重码词，比移动光标选重更优雅的解决方案仍然是通过补辅助码（`/`）来进行词选重，并且选多少重都可以。
+
 <p float="left">
   <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong.gif" width="540" />
   <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong2.gif" width="540" />
+</p>
+
+### 3.整句句中恢复防变机制
+
+尽管形码整句准确率非常高，但仍有出现意外的可能，比如前面已打的内容发生了不希望发生的改变，被“搞乱”了，那么通过补辅助码（`/`）来恢复原内容并固定下来，不受后面句子延长的影响。
+
+<p float="left">
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/huifu_fangbian_jizhi.gif" width="540" />
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/huifu_fangbian_jizhi2.gif" width="540" />
 </p>
 
 
