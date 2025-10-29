@@ -27,7 +27,7 @@
 
 可在规则统一、连贯不中断的情况下流畅地打十万汉字。虽然每个汉字的全码最多是 4 码，但日常打常用字只需要打 2、3 码打常用字，有生僻字需要时再无缝补上第 4 码即可。
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/sheng_pi_zi.gif)
+<img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/sheng_pi_zi.gif" width="600" />
 
 ### 1.整句句中单字选重
 
@@ -38,9 +38,10 @@
 
 ### 2.整句句中词选重
 
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong.gif)
-
-![img](https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong2.gif)
+<p float="left">
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong.gif" width="540" />
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/ci_xuan_chong2.gif" width="540" />
+</p>
 
 
 ## 已开发支持的形码
