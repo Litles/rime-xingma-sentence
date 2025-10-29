@@ -31,7 +31,10 @@
 
 ### 1.整句句中单字选重
 
-<img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/dan_zi_xuan_chong.gif" width="540"><img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/dan_zi_xuan_chong2.gif" width="540">
+<p float="left">
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/dan_zi_xuan_chong.gif" width="540" />
+  <img src="https://github.com/Litles/rime-xingma-sentence/blob/main/demo/dan_zi_xuan_chong2.gif" width="540" />
+</p>
 
 ### 2.整句句中词选重
 
