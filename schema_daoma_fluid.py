@@ -7,28 +7,28 @@
 
 from schema_yujoy_fluid import SchemaYujoyFluid
 
-class SchemaYulightFluid(SchemaYujoyFluid):
+class SchemaDaomaFluid(SchemaYujoyFluid):
     def __init__(self, dir_in: str, fname_full: str, dir_out: str, sname: str, version: str):
         super().__init__(dir_in, fname_full, dir_out, sname, version)
 
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaYulightFluid(
-        "material_yulight",
-        "yulight.dict.yaml",
-        "schema_yulight_fluid/dicts_yulight_fluid",
-        "光华",
-        "2.4"
-    )
-    # myschema.build()
-    # myschema = SchemaYulightFluid(
-    #     "material_yulight",
-    #     "yulight.dict.yaml",
-    #     "schema_yulight_fluid/dicts_yulight_fluid_a",
-    #     "光华",
+    # myschema = SchemaDaomaFluid(
+    #     "material_daoma",
+    #     "daoma.dict.yaml",
+    #     "schema_daoma_fluid/dicts_daoma_fluid",
+    #     "刀码",
     #     "2.4"
     # )
-    # myschema.build("A")  # a版
+    # myschema.build()
+    myschema = SchemaDaomaFluid(
+        "material_daoma",
+        "daoma.dict.yaml",
+        "schema_daoma_fluid/dicts_daoma_fluid_a",
+        "刀码",
+        "2.4"
+    )
+    myschema.build("A")  # a版
     # myschema.generate_other_dicts()
     print("\nRuntime:", time.perf_counter() - start)

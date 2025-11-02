@@ -7,26 +7,26 @@
 
 from schema_yujoy_fluid import SchemaYujoyFluid
 
-class SchemaYulightFluid(SchemaYujoyFluid):
+class SchemaZiyuanFluid(SchemaYujoyFluid):
     def __init__(self, dir_in: str, fname_full: str, dir_out: str, sname: str, version: str):
         super().__init__(dir_in, fname_full, dir_out, sname, version)
 
 if __name__ == '__main__':
     import time
     start = time.perf_counter()
-    myschema = SchemaYulightFluid(
-        "material_yulight",
-        "yulight.dict.yaml",
-        "schema_yulight_fluid/dicts_yulight_fluid",
-        "光华",
+    myschema = SchemaZiyuanFluid(
+        "material_ziyuan",
+        "ziyuan.dict.yaml",
+        "schema_ziyuan_fluid/dicts_ziyuan_fluid",
+        "字源",
         "2.4"
     )
-    # myschema.build()
-    # myschema = SchemaYulightFluid(
-    #     "material_yulight",
-    #     "yulight.dict.yaml",
-    #     "schema_yulight_fluid/dicts_yulight_fluid_a",
-    #     "光华",
+    myschema.build()
+    # myschema = SchemaZiyuanFluid(
+    #     "material_ziyuan",
+    #     "ziyuan.dict.yaml",
+    #     "schema_ziyuan_fluid/dicts_ziyuan_fluid_a",
+    #     "字源",
     #     "2.4"
     # )
     # myschema.build("A")  # a版

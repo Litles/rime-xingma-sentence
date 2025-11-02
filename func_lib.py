@@ -64,6 +64,7 @@ def load_char_code(*files: str, full_only: bool = True, clen: int = 0) -> dict:
     dict_char_codes = defaultdict(set)
     for file in files:
         with open(file, 'r', encoding='utf-8') as fr:
+            tmp_code = ""
             for line in fr:
                 if (not line.startswith("#")) and ("\t" in line):
                     # 1.从码表文件中提取编码
@@ -77,14 +78,17 @@ def load_char_code(*files: str, full_only: bool = True, clen: int = 0) -> dict:
                         else:
                             code_new = code_new[clen:]  # 只取后|clen|码
                     # 2.开始处理 (只保留最全的编码, 支持一字多码, 比如有容错码)
-                    if full_only and char in dict_char_codes:
-                        for code in dict_char_codes[char]:
-                            # 如果新来的码更全, 用它取代旧的
-                            if code_new.startswith(code):
-                                dict_char_codes[char].discard(code)
-                                dict_char_codes[char].add(code_new)
-                    else:
-                        dict_char_codes[char].add(code_new)
+                    if char in dict_char_codes:
+                        if full_only:
+                            change_flag = False
+                            for code in dict_char_codes[char]:
+                                # 如果新来的码更全, 用它取代旧的
+                                if code_new.startswith(code):
+                                    tmp_code = code
+                                    break
+                            if change_flag:
+                                dict_char_codes[char].discard(tmp_code)
+                    dict_char_codes[char].add(code_new)
     return dict_char_codes
 
 def combine_code_and_freq(dict_char_codes: dict, dict_word_freq: dict, charset: set = set()) -> list:

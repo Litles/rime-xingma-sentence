@@ -658,12 +658,14 @@ class SchemaYujoyFluid:
         list_word_code_len2 = []
         for word, freq in self.dict_word_freq.items():
             if len(word) == 2 and (word in words_len2) \
-                and set(word).isdisjoint(set_qc1_char) and set(word).isdisjoint(set_qc2_char):
-                list_word_code_len2.append({
-                    "word": word,
-                    "code": "".join(dict_char_c1[char] for char in word),
-                    "freq": freq
-                })
+                and set(word).isdisjoint(set_qc1_char) \
+                and set(word).isdisjoint(set_qc2_char) \
+                and set(word).issubset(dict_char_c1):
+                    list_word_code_len2.append({
+                        "word": word,
+                        "code": "".join(dict_char_c1[char] for char in word),
+                        "freq": freq
+                    })
         list_word_code_len2.sort(key=lambda d: d["freq"], reverse=True)
 
         # --- 2.开始设简(一二简词) ---
